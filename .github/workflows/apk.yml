@@ -1,0 +1,47 @@
+name: Gerar APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: android-actions/setup-android@v3
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Gerar APK
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - name: Renomear
+        run: cp app/build/outputs/apk/debug/app-debug.apk ValeSereno.apk
+
+      - name: Guardar como artefato
+        uses: actions/upload-artifact@v4
+        with:
+          name: ValeSereno-apk
+          path: ValeSereno.apk
+
+      - name: Publicar na página de releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: teste-${{ github.run_number }}
+          name: Vale Sereno (teste ${{ github.run_number }})
+          body: APK de teste gerado automaticamente. Baixe o ValeSereno.apk no celular Android e instale.
+          prerelease: true
+          files: ValeSereno.apk
