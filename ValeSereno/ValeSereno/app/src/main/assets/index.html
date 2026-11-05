@@ -1,0 +1,1714 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Vale Sereno</title>
+<style>
+@font-face{font-family:'Pixelify Sans';font-weight:400;font-display:swap;src:url(fonts/pixelify-sans-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:'Pixelify Sans';font-weight:600;font-display:swap;src:url(fonts/pixelify-sans-latin-600-normal.woff2) format('woff2')}
+@font-face{font-family:'Silkscreen';font-weight:400;font-display:swap;src:url(fonts/silkscreen-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:'Caveat';font-weight:500;font-display:swap;src:url(fonts/caveat-latin-500-normal.woff2) format('woff2')}
+@font-face{font-family:'Caveat';font-weight:600;font-display:swap;src:url(fonts/caveat-latin-600-normal.woff2) format('woff2')}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);box-sizing:border-box}
+body{margin:0;font-size:14px}
+</style>
+<style>
+/* Layout: celular deitado. Analógico à esquerda, tela 16:9 no centro, botões à direita */
+:root{
+  --ink:#0d110f;
+  --panel:#161c18;
+  --line:#2c362f;
+  --paper:#efe5cf;
+  --text:#e8e1cf;
+  --muted:#8e998f;
+  --gold:#d8b25a;
+  --gold-d:#a8853a;
+  --f-display:'Pixelify Sans','Courier New',monospace;
+  --f-label:'Silkscreen','Courier New',monospace;
+  --f-hand:'Caveat','Bradley Hand','Segoe Script',cursive;
+  color-scheme:dark;
+}
+html{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%;overflow:hidden}
+body{
+  background:var(--ink);color:var(--text);font-family:var(--f-display);
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
+  -webkit-tap-highlight-color:transparent;touch-action:none;
+}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+#app{
+  height:100%;box-sizing:border-box;display:grid;grid-template-columns:clamp(128px,17vw,170px) minmax(0,1fr) clamp(128px,17vw,170px);
+  align-items:center;gap:10px;
+  padding-left:max(16px, env(safe-area-inset-left,0px));
+  padding-right:max(16px, env(safe-area-inset-right,0px));
+  padding-block:8px;
+}
+.side{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding-block:4px 10px;box-sizing:border-box;min-width:0}
+
+/* Tela */
+#stage{height:100%;width:100%;min-width:0;display:flex;align-items:center;justify-content:center}
+#screen{position:relative;border:2px solid var(--line);border-radius:4px;overflow:hidden;background:#000;line-height:0;font-size:14px}
+#cv{display:block;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges;transition:filter 1.6s ease}
+#vig{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 45%, rgba(0,0,0,0) 50%, rgba(0,0,0,.9) 100%);opacity:0;transition:opacity 1.6s ease}
+#fade{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;transition:opacity .6s ease;z-index:9}
+
+#hud{
+  position:absolute;left:0;top:0;right:0;z-index:3;pointer-events:none;line-height:1.25;
+  padding:.55em .8em 1.4em;background:linear-gradient(180deg, rgba(8,10,9,.72), rgba(8,10,9,0));
+  display:flex;flex-direction:column;gap:.2em;
+}
+#dayLabel{font-family:var(--f-label);font-size:.68em;letter-spacing:.12em;color:var(--gold)}
+#objective{font-size:.95em;color:var(--text);text-shadow:0 1px 0 #000}
+
+/* Diálogo */
+#dialog{
+  position:absolute;left:.6em;right:.6em;bottom:.6em;z-index:6;line-height:1.36;
+  background:rgba(12,15,13,.95);border:2px solid var(--paper);border-radius:3px;
+  padding:1em .9em .85em;font-size:1.05em;min-height:3.6em;box-sizing:border-box;
+}
+#dialog .who{
+  position:absolute;top:-.8em;left:.7em;background:var(--paper);color:var(--ink);
+  font-family:var(--f-label);font-size:.62em;letter-spacing:.1em;padding:.3em .6em .2em;
+}
+#dialog.thought .txt{font-style:italic;color:#cfc7b3}
+#dialog.narr .txt{color:#d9d2c0}
+#dialog .nxt{position:absolute;right:.6em;bottom:.3em;font-size:.8em;color:var(--gold);animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+
+#card{
+  position:absolute;inset:0;z-index:5;background:#050605;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;gap:.9em;padding:1.5em;box-sizing:border-box;line-height:1.4;
+}
+#card .big{font-size:2.6em;font-weight:600;letter-spacing:.02em;color:var(--paper);line-height:1.1}
+#card .sub{font-size:1.05em;color:var(--muted);max-width:32ch;text-wrap:balance}
+#card .nar{font-size:1.25em;color:var(--paper);max-width:32ch;text-wrap:balance}
+#card .tap{position:absolute;bottom:1em;font-family:var(--f-label);font-size:.62em;letter-spacing:.14em;color:#5d665f}
+
+#call{
+  position:absolute;inset:0;z-index:4;background:#07090a;display:flex;flex-direction:column;
+  align-items:center;padding-top:9%;gap:.5em;line-height:1.3;
+}
+#call .lbl{font-family:var(--f-label);font-size:.62em;letter-spacing:.16em;color:var(--muted)}
+#call .name{font-size:2em;font-weight:600;color:var(--paper)}
+#call .bars{display:flex;gap:3px;align-items:flex-end;height:14px;margin-top:4px}
+#call .bars i{display:block;width:4px;background:#39433b}
+#call .bars i.on{background:var(--paper)}
+#call .time{font-family:var(--f-label);font-size:.7em;color:var(--muted);font-variant-numeric:tabular-nums}
+
+#endui{
+  position:absolute;left:0;right:0;bottom:0;z-index:7;display:flex;align-items:center;justify-content:center;gap:1.2em;
+  padding:1em;line-height:1.3;background:linear-gradient(180deg, rgba(0,0,0,0), rgba(0,0,0,.85));
+  opacity:0;transition:opacity 2s ease;pointer-events:none;
+}
+#endui.in{opacity:1;pointer-events:auto}
+#endui .fim{font-size:2em;font-weight:600;color:var(--paper);letter-spacing:.1em}
+#endui .pbtn{font-size:1em;padding:.6em 1em}
+
+/* Controles */
+.hbtn{
+  background:var(--panel);border:1px solid var(--line);border-radius:6px;
+  font-family:var(--f-label);font-size:9px;letter-spacing:.1em;color:var(--muted);
+  padding:9px 10px;min-height:36px;min-width:92px;
+}
+.hbtn:active{background:#202822}
+.hbtn.off{opacity:.55}
+.hbtn.pulse{animation:pulse 1.4s ease 2}
+@keyframes pulse{50%{border-color:var(--gold);color:var(--gold)}}
+.side .top{display:flex;flex-direction:column;gap:8px;align-items:center}
+
+#stick{position:relative;width:132px;height:132px;border-radius:50%;touch-action:none;
+  background:radial-gradient(circle at 50% 50%, #1b221d 0 58%, #161c18 59% 100%);
+  border:2px solid var(--line);box-sizing:border-box}
+#stick::before{content:"";position:absolute;inset:18px;border-radius:50%;border:1px dashed #2f3a32}
+#knob{position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;
+  background:radial-gradient(circle at 40% 35%, #4a554c, #2a332c 70%);border:2px solid #56625a;box-sizing:border-box;
+  box-shadow:0 4px 0 #0a0d0b;will-change:transform}
+#stick.on #knob{border-color:var(--gold)}
+.stick-label{font-family:var(--f-label);font-size:9px;letter-spacing:.14em;color:var(--muted)}
+
+#btnA{
+  width:84px;height:84px;border-radius:50%;border:none;background:var(--gold);color:#1b160c;
+  font-size:32px;font-weight:600;box-shadow:inset 0 -5px 0 var(--gold-d);touch-action:none;
+}
+#btnA.on{transform:translateY(2px);box-shadow:inset 0 -2px 0 var(--gold-d)}
+.abtn-wrap{display:flex;flex-direction:column;align-items:center;gap:8px}
+
+/* Telas cheias */
+.full{
+  position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding-left:max(24px, env(safe-area-inset-left,0px));padding-right:max(24px, env(safe-area-inset-right,0px));
+  padding-block:16px;box-sizing:border-box;text-align:center;
+}
+#title{background:#070908;gap:12px;line-height:1.35}
+#title .kick{font-family:var(--f-label);font-size:10px;letter-spacing:.18em;color:var(--gold)}
+#title h1{margin:0;font-size:clamp(38px, 9vh, 60px);font-weight:600;line-height:1;color:var(--paper);letter-spacing:.01em}
+#title p{margin:0;max-width:40ch;font-size:16px;color:#cfc8b6;text-wrap:balance}
+#title .btns{display:flex;gap:10px;margin-top:6px;flex-wrap:wrap;justify-content:center}
+.pbtn{
+  background:var(--paper);color:var(--ink);border:none;border-radius:4px;padding:12px 22px;font-size:17px;font-weight:600;
+  box-shadow:inset 0 -4px 0 #c9bd9f;
+}
+.pbtn.ghost{background:transparent;color:var(--paper);box-shadow:none;border:2px solid var(--line)}
+#title .hint{font-size:13px;color:var(--muted);max-width:52ch}
+
+#notebook{background:rgba(5,6,5,.86);z-index:30}
+#notebook .sheet{
+  background:var(--paper);color:#2a241b;width:min(520px,100%);max-height:100%;overflow:auto;border-radius:3px;
+  padding:16px 20px 14px;box-sizing:border-box;text-align:left;line-height:1.4;
+  background-image:repeating-linear-gradient(180deg, transparent 0 25px, rgba(60,80,120,.13) 25px 26px);
+}
+#notebook h2{margin:0 0 10px;font-family:var(--f-label);font-size:11px;letter-spacing:.16em;color:#7a6a4c;font-weight:400}
+#notebook .d{font-family:var(--f-label);font-size:9px;letter-spacing:.12em;color:#9a8a6a;margin:10px 0 2px}
+#notebook .e{font-size:15px;margin:2px 0}
+#notebook .e.hand{font-family:var(--f-hand);font-size:23px;color:#5a2a22}
+#notebook .empty{font-size:15px;color:#7a6a4c}
+#notebook .close{margin-top:12px}
+
+#mapview{background:rgba(5,6,5,.92);z-index:30}
+.mapwrap{display:flex;flex-direction:column;align-items:center;gap:8px;height:100%;justify-content:center}
+.maptitle{font-family:var(--f-label);font-size:10px;letter-spacing:.18em;color:var(--gold)}
+#mapcv{height:calc(100% - 60px);width:auto;max-width:100%;image-rendering:pixelated;border:2px solid var(--line);border-radius:3px}
+.maphint{font-size:13px;color:var(--muted)}
+
+#letter{background:#000;z-index:25;cursor:pointer;flex-direction:row;gap:28px}
+#letter .paper{
+  background:#efe6d2;color:#2b241b;width:min(460px,100%);box-sizing:border-box;padding:18px 22px 20px;text-align:left;
+  font-family:var(--f-hand);font-size:clamp(18px, 4.6vh, 24px);line-height:1.2;border-radius:2px;
+  box-shadow:0 0 0 1px #d8ccb2, 0 18px 50px rgba(0,0,0,.6);transform:rotate(-1.2deg);
+}
+#letter .paper p{margin:0 0 6px;opacity:0;transition:opacity 1.2s ease}
+#letter .paper p.in{opacity:1}
+#letter .paper .sig{text-align:right;margin-top:4px}
+#letter .tap{position:absolute;bottom:14px;font-family:var(--f-label);font-size:9px;letter-spacing:.14em;color:#5d665f;opacity:0;transition:opacity 1s}
+#letter .tap.in{opacity:1}
+
+#rotate{display:none;background:var(--ink);z-index:50;gap:14px;line-height:1.4}
+#rotate .phone{width:46px;height:78px;border:3px solid var(--paper);border-radius:9px;position:relative;animation:turn 2.4s ease-in-out infinite}
+#rotate .phone::after{content:"";position:absolute;left:50%;bottom:6px;width:10px;height:3px;margin-left:-5px;background:var(--paper);border-radius:2px}
+@keyframes turn{0%,25%{transform:rotate(0)}55%,100%{transform:rotate(-90deg)}}
+#rotate h2{margin:0;font-size:22px;font-weight:600;color:var(--paper)}
+#rotate p{margin:0;font-size:15px;color:var(--muted);max-width:28ch}
+@media (orientation: portrait) and (max-width: 820px){ #rotate{display:flex} }
+
+@media (prefers-reduced-motion: reduce){
+  #cv,#vig,#fade,#endui,#letter .paper p{transition:none}
+  #dialog .nxt,.hbtn.pulse,#rotate .phone{animation:none}
+}
+</style>
+</head>
+<body>
+
+
+<div id="app">
+  <aside class="side">
+    <div class="top">
+      <button class="hbtn" id="btnSnd" type="button" aria-label="Ligar ou desligar o som">SOM</button>
+    </div>
+    <div class="abtn-wrap">
+      <div id="stick" aria-label="Analógico"><div id="knob"></div></div>
+      <span class="stick-label">ANDAR</span>
+    </div>
+  </aside>
+
+  <main id="stage">
+    <div id="screen">
+      <canvas id="cv" width="384" height="216" aria-label="Tela do jogo"></canvas>
+      <div id="vig"></div>
+      <div id="hud"><div id="dayLabel">DIA 1 DE 7</div><div id="objective">Conheça os moradores</div></div>
+      <div id="call" hidden>
+        <div class="lbl" id="callLbl">LIGAÇÃO</div>
+        <div class="name">Bia</div>
+        <div class="bars" id="bars"><i style="height:4px"></i><i style="height:7px"></i><i style="height:10px"></i><i style="height:14px"></i></div>
+        <div class="time" id="callTime">00:00</div>
+      </div>
+      <div id="card" hidden></div>
+      <div id="dialog" hidden><div class="who" id="who"></div><div class="txt" id="txt"></div><div class="nxt" id="nxt" hidden>▾</div></div>
+      <div id="endui"><div class="fim">FIM</div><button class="pbtn" id="btnAgain" type="button">Jogar de novo</button></div>
+      <div id="fade"></div>
+    </div>
+  </main>
+
+  <aside class="side">
+    <div class="top">
+      <button class="hbtn" id="btnMap" type="button" aria-label="Abrir mapa da cidade">MAPA</button>
+      <button class="hbtn" id="btnNote" type="button" aria-label="Abrir caderno">CADERNO</button>
+    </div>
+    <div class="abtn-wrap">
+      <button id="btnA" type="button" aria-label="Interagir">A</button>
+      <span class="stick-label">INTERAGIR</span>
+    </div>
+  </aside>
+</div>
+
+<section class="full" id="title">
+  <div class="kick">PROTÓTIPO · TERROR PSICOLÓGICO</div>
+  <h1>Vale Sereno</h1>
+  <p>Sete dias de férias numa cidade hospitaleira demais.</p>
+  <div class="btns">
+    <button class="pbtn" id="btnStart" type="button">Começar</button>
+    <button class="pbtn ghost" id="btnCont" type="button" hidden>Continuar</button>
+  </div>
+  <div class="hint">Analógico à esquerda para andar, A à direita para conversar e examinar. Quase tudo na cidade pode ser examinado. Com fone fica melhor.</div>
+</section>
+
+<section class="full" id="notebook" hidden>
+  <div class="sheet">
+    <h2>CADERNO DE FÉRIAS</h2>
+    <div id="notes"></div>
+    <button class="pbtn close" id="btnNoteClose" type="button">Fechar</button>
+  </div>
+</section>
+
+<section class="full" id="mapview" hidden>
+  <div class="mapwrap">
+    <div class="maptitle">VALE SERENO</div>
+    <canvas id="mapcv" aria-label="Mapa da cidade"></canvas>
+    <div class="maphint">Você está no ponto dourado. Toque para fechar.</div>
+  </div>
+</section>
+
+<section class="full" id="letter" hidden>
+  <div class="paper" id="paper"></div>
+  <div class="tap" id="letterTap">TOQUE PARA CONTINUAR</div>
+</section>
+
+<section class="full" id="rotate">
+  <div class="phone"></div>
+  <h2>Gire o celular</h2>
+  <p>Vale Sereno é jogado na horizontal.</p>
+</section>
+
+<script>
+(() => {
+'use strict';
+/* ================= ROTEIRO ================= */
+const NAMES = {iracema:'Dona Iracema', bento:'Seu Bento', lucia:'Lúcia', tobias:'Tobias', rosa:'Rosa', dalva:'Dalva', otavio:'Seu Otávio', ivo:'Seu Ivo', marcos:'Marcos', bia:'Bia', caio:'Caio'};
+const VOICE = {iracema:470, bento:300, lucia:610, tobias:410, rosa:560, dalva:520, otavio:210, ivo:260, marcos:450, bia:640, caio:340};
+const POS = {
+  iracema:[8,22,'down'], bento:[34,22,'down'], lucia:[8,31,'down'], tobias:[16,20,'right'],
+  rosa:[17,23,'up'], dalva:[23,31,'down'], otavio:[8,11,'down'], ivo:[31,9,'up'], dog:[36,22,'left']
+};
+const AGAIN = {
+  iracema:[['iracema','Aqui ninguém tem pressa.']],
+  bento:[['bento','Você já é de casa.']],
+  lucia:[['lucia','A floresta cuida da gente.']],
+  tobias:[['tobias','Fica mais um pouco. Ainda não terminei.']],
+  rosa:[['rosa','...']],
+  dalva:[['dalva','Todo mundo tem alguém esperando notícia.']],
+  otavio:[['otavio','...']],
+  ivo:[['ivo','Shh. Os peixes.']],
+  marcos:[['marcos','Aqui é bom demais, né?']],
+  dog:[['t','Biscoito te observa.']]
+};
+
+const DAYS = {
+  1: {
+    sub:'Chegada', spawn:[20,39,'up'], obj:'Conheça os moradores',
+    tasks:['npc:iracema','npc:bento','npc:lucia','npc:tobias','npc:rosa'],
+    npcs:{
+      iracema:[
+        [['iracema','Caio! Chegou bem? O quarto está pronto desde cedo.'],['caio','Eu ainda nem disse meu nome.'],['iracema','Disse sim, na reserva. A gente não esquece quem vem.'],['t','Eu não fiz reserva. Eu só vim.'],['iracema','Café às sete, janta às sete. Aqui ninguém tem pressa.']],
+        [['iracema','Pode andar à vontade. Só não vai pra trilha.'],['iracema','Ela ainda não está pronta pra você.']]
+      ],
+      bento:[
+        [['bento','Bom dia! Trinta e dois pães de queijo hoje. Sempre trinta e dois.'],['bento','Um é seu, por conta da casa.'],['caio','Obrigado. Quanto eu te devo?'],['bento','Nada. Você já é de casa.']],
+        [['bento','Trinta e um agora.'],['bento','Amanhã volta a ser trinta e dois. Sempre volta.']]
+      ],
+      lucia:[
+        [['lucia','Uma flor pro moço da cidade grande.'],['lucia','Cada pessoa que chega ganha uma. Eu planto, rego e dou nome.'],['lucia','As mais bonitas nascem perto da floresta.']],
+        [['lucia','Antes de vir pra cá eu cuidava de gente. Agora cuido de flor.'],['lucia','É quase igual. Só que flor não reclama quando vai embora.']]
+      ],
+      tobias:[
+        [['tobias','Opa. Não repara, eu pinto a praça todo dia.'],['tobias','Sempre a mesma praça. Uma hora eu acerto.'],['caio','Você sempre foi pintor?'],['tobias','Antes eu fazia coisa de computador. Tela, cor, prazo.'],['t','Ele fala igual a mim.']],
+        [['tobias','Prazo. Engraçado essa palavra.'],['tobias','Aqui ela não serve pra nada.']]
+      ],
+      rosa:[
+        [['rosa','Bonito, né? Eu sento aqui todo dia e fico olhando pra lá.'],['t','Ela aponta para a floresta.'],['caio','Você mora aqui faz tempo?'],['rosa','Faz.'],['rosa','Acho que faz.']],
+        [['rosa','Eu escrevo uma palavra na palma da mão toda manhã.'],['rosa','Hoje esqueci qual era.']]
+      ],
+      dalva:[
+        [['dalva','Correio de Vale Sereno, às ordens. Moço novo?'],['caio','Cheguei hoje.'],['dalva','Então me passa o endereço de alguém que espera notícia sua.'],['caio','Pra quê?'],['dalva','Todo mundo tem alguém esperando notícia. Depois a gente vê.']],
+        [['dalva','Carta é melhor que telefone.'],['dalva','Telefone aqui não pega. Carta sempre chega.']]
+      ],
+      otavio:[
+        [['otavio','...'],['otavio','Você é o de hoje.'],['caio','Como assim?'],['otavio','O sino toca à noite. Não se assusta.']]
+      ],
+      ivo:[
+        [['ivo','Shh. Assusta os peixes.'],['caio','Pegou alguma coisa?'],['ivo','Nunca.'],['ivo','Mas eu volto todo dia. Um dia ele morde.']]
+      ],
+      dog:[[['t','Um vira-lata caramelo. A coleira diz "Biscoito".'],['t','Ele abana o rabo pra você. Depois vira e rosna baixinho pra floresta.']]]
+    },
+    notes:{'npc:iracema':'Dona Iracema sabia meu nome antes de eu dizer.','npc:tobias':'Tobias trabalhava com computador antes. Como eu.'},
+    call:[['bia','E aí, sobreviveu à rodoviária?'],['caio','Cheguei. A cidade é bonita. Estranha.'],['bia','Estranha como?'],['caio','Todo mundo é gentil demais. Sabem meu nome.'],['bia','Cidade pequena, amor. A fofoca chega antes do ônibus.'],['bia','Desliga esse celular e descansa. Me liga amanhã.']],
+    signal:4
+  },
+  2: {
+    sub:'Bom dia', spawn:[6,22,'down'], obj:'Converse e repare na cidade',
+    tasks:['npc:iracema','npc:lucia','npc:tobias','obj:easel','npc:ivo'],
+    npcs:{
+      iracema:[
+        [['iracema','Dormiu bem? Ouvi você conversando com a Bia ontem.'],['iracema','Moça bonita. Ela vai gostar daqui.'],['t','Eu nunca falei o nome dela. E a porta do quarto estava fechada.']],
+        [['iracema','Eu sempre ponho dois pratos na mesa. Um pra mim e um pro meu marido.'],['caio','Ele está aqui?'],['iracema','Marido?'],['iracema','Eu nunca fui casada, Caio. Que coisa.']]
+      ],
+      bento:[
+        [['bento','Bom dia! Trinta e dois pães de queijo hoje. Sempre trinta e dois.'],['bento','Um é seu, por conta da casa.'],['t','Igual ontem. Palavra por palavra.']]
+      ],
+      lucia:[
+        [['lucia','Uma flor pro moço da cidade grande.'],['caio','Você me deu uma ontem.'],['lucia','Dei?'],['lucia','Então essa é pra amanhã. Guarda.']],
+        [['lucia','Abri um canteiro novo perto da trilha.'],['lucia','Terra fofinha. Esperando semente.']]
+      ],
+      tobias:[
+        [['tobias','A praça ficou melhor hoje. Tem uma pessoa a mais.'],['tobias','Olha a tela. Me diz se ficou parecido.']],
+        [['tobias','Às vezes eu aperto Ctrl Z no ar. Força do hábito.'],['tobias','Ia ser bom poder desfazer umas coisas.']]
+      ],
+      rosa:[
+        [['rosa','Você é de São Paulo?'],['caio','Sou.'],['rosa','Eu também acho que sou.'],['rosa','Lembro de uma esquina com uma padaria. Só da esquina.']]
+      ],
+      dalva:[
+        [['dalva','E aí, lembrou do endereço?'],['caio','Por que você quer tanto?'],['dalva','Pra quando você estiver ocupado demais pra escrever. A gente escreve por você.'],['dalva','Brincadeira.']]
+      ],
+      otavio:[
+        [['otavio','Ouviu o sino ontem?'],['caio','Ouvi. Que horas ele toca?'],['otavio','Quando chega alguém.']]
+      ],
+      ivo:[
+        [['ivo','Nada ainda.'],['caio','Tem peixe nesse lago?'],['ivo','Deve ter. Ninguém nunca viu, mas deve ter.'],['ivo','Antes de pescar eu dirigia alguma coisa. Esqueci o quê.']]
+      ],
+      dog:[[['t','Biscoito deita no seu pé.'],['t','Ele treme quando o vento vem da floresta.']]]
+    },
+    notes:{'npc:iracema':'Dona Iracema sabe da Bia. Eu nunca contei.','obj:easel':'Tem um homem de camisa azul na pintura do Tobias. No banco onde eu sentei.','npc:ivo':'Seu Ivo dirigia alguma coisa antes. Não lembra o quê.'},
+    call:[['bia','Te mandei mensagem o dia todo.'],['caio','Não chegou nada. O sinal aqui é ruim.'],['bia','E a cidade estranha?'],['caio','Menos estranha hoje. Acho que eu tava cansado.'],['bia','Viu? Sua voz tá até mais leve.']],
+    signal:3
+  },
+  3: {
+    sub:'Ninguém tem pressa', spawn:[6,22,'down'], obj:'Investigue a cidade',
+    tasks:['npc:bento','npc:rosa','npc:otavio','obj:graves','obj:school'],
+    npcs:{
+      iracema:[
+        [['iracema','Mais um dia? Fica mais um pouco.'],['caio','Faz quanto tempo que a senhora mora aqui?'],['iracema','Desde que cheguei.'],['iracema','Antes disso não tem muito o que contar.']]
+      ],
+      bento:[
+        [['bento','Bom dia! Trinta e dois pães de...'],['caio','Seu Bento, quem foi o último turista antes de mim?'],['bento','O último...'],['bento','Trinta e dois pães de queijo. Sempre trinta e dois.'],['t','Ele não ouviu a pergunta. Ou não conseguiu.']]
+      ],
+      lucia:[
+        [['lucia','As flores perto da floresta estão lindas esse ano.'],['lucia','Sempre estão. Elas comem bem.'],['caio','Comem?'],['lucia','Bebem. Falei bebem.']]
+      ],
+      tobias:[
+        [['tobias','Você reparou que ninguém aqui fala de onde veio?'],['tobias','Eu tenho um celular no bolso. Sem bateria faz anos. Não consigo jogar fora.'],['tobias','Tem uma senha que eu não lembro. Seis números. Acho que era uma data.']]
+      ],
+      rosa:[
+        [['rosa','...'],['rosa','Desculpa. Às vezes a floresta me chama pelo nome.'],['caio','E qual é o seu nome?'],['rosa','Tá escrito aqui.'],['t','Ela olha pra palma da mão. Está em branco.']]
+      ],
+      dalva:[
+        [['dalva','Cartas de hoje: nenhuma chegou. Três saíram.'],['caio','Pra onde?'],['dalva','Pra família de quem ficou.']]
+      ],
+      otavio:[
+        [['otavio','Limpei as lápides hoje.'],['otavio','Vai lá ler. Ninguém aqui tem medo.']]
+      ],
+      ivo:[
+        [['ivo','Ontem o lago mostrou outra pessoa pescando.'],['ivo','Do lado de lá. Igual a mim.']]
+      ],
+      dog:[[['t','Biscoito não sai de perto da padaria.'],['t','Quando você chega perto da floresta, ele late uma vez. Só uma.']]]
+    },
+    notes:{'npc:rosa':'A Rosa não lembra o próprio nome. A mão dela está em branco.','obj:graves':'As lápides marcam o dia em que a pessoa chegou. Nunca quando morreu.','obj:school':'Tem escola, mas não tem criança. No quadro: "Lição de casa: ficar."'},
+    call:[['bia','Caio? Tá me ouvindo?'],['','(chiado)'],['caio','Tô. Aqui tá tudo bem.'],['bia','Você sumiu o dia inteiro.'],['caio','Desculpa. O tempo aqui passa diferente.'],['bia','Sua voz tá diferente.'],['caio','É o sinal.']],
+    signal:2
+  },
+  4: {
+    sub:'Visitantes', spawn:[6,22,'down'], obj:'Investigue a cidade',
+    tasks:['npc:rosa','npc:dalva','npc:tobias','obj:mural','npc:bento'],
+    npcs:{
+      iracema:[
+        [['iracema','Viu o mural da praça? Todo mundo que vem tira uma foto.'],['iracema','E todo mundo fica feliz. Você também vai.']]
+      ],
+      bento:[
+        [['bento','Bom dia! Trinta e dois...'],['caio','O senhor trabalhava com números antes?'],['bento','...'],['t','Ele para. Os olhos enchem de água.'],['bento','Eu tinha uma filha que odiava matemática.'],['bento','Trinta e dois pães de queijo. Um é seu, por conta da casa.']]
+      ],
+      lucia:[
+        [['lucia','Plantei uma flor nova perto da trilha.'],['lucia','Ainda não sei o nome dela.'],['lucia','Talvez seja o seu.']]
+      ],
+      tobias:[
+        [['tobias','Terminei a pintura. Você ficou bem nela.'],['caio','Tobias, você nunca quis ir embora?'],['tobias','Fui. Várias vezes. A estrada faz uma curva e devolve a gente pra praça.'],['tobias','Na quinta vez eu parei de tentar.'],['tobias','Foi um alívio.']]
+      ],
+      rosa:[
+        [['rosa','Caio. Escuta, rápido.'],['rosa','Tem uma foto minha no mural. Eu não lembro dela. Mas lembro de escrever uma carta.'],['rosa','Não escreve carta pra ninguém. Promete.'],['caio','Por quê?'],['rosa','Porque aí vem mais um.'],['rosa','...'],['rosa','Bonito, né? Eu sento aqui todo dia e fico olhando pra lá.']]
+      ],
+      dalva:[
+        [['dalva','Chegou uma carta pra você.'],['caio','Pra mim? Ninguém sabe que eu tô aqui.'],['dalva','Ah, me enganei. É de você.'],['dalva','Só que ainda não foi escrita.'],['t','Ela guarda alguma coisa na gaveta rápido demais.']]
+      ],
+      otavio:[
+        [['otavio','Cavei um buraco novo hoje.'],['otavio','Não pergunta pra quem. Eu também não sei.'],['otavio','Só sei o tamanho.']]
+      ],
+      ivo:[
+        [['ivo','Lembrei o que eu dirigia.'],['ivo','Um ônibus. Azul e branco. Linha 412, da capital.'],['ivo','Depois a gente não precisou mais de ônibus.']]
+      ],
+      dog:[[['t','Biscoito morde a sua manga e puxa.'],['t','Na direção da estrada.']]]
+    },
+    notes:{'npc:rosa':'A Rosa me pediu: "Não escreve carta pra ninguém. Aí vem mais um."','npc:dalva':'Dalva disse que tem uma carta minha. Que ainda não foi escrita.','obj:mural':'Foto no mural: "Rosa A., São Paulo, 2019. Fico só uma semana."','npc:bento':'Seu Bento teve uma filha. Ele chorou e esqueceu em seguida.','npc:ivo':'Seu Ivo dirigia o ônibus da linha 412.'},
+    call:[['bia','Quando você volta mesmo?'],['caio','...'],['caio','Domingo. Acho.'],['bia','Acha? Caio, você comprou a passagem de volta?'],['caio','Aqui não precisa. O ônibus passa.'],['bia','Me manda o endereço da pousada, por via das dúvidas.'],['caio','Te mando por carta.'],['bia','Carta? Desde quando você escreve carta?']],
+    signal:2
+  },
+  5: {
+    sub:'A trilha', spawn:[6,22,'down'], obj:'Descubra o que aconteceu',
+    tasks:['npc:bento','npc:marcos','npc:dalva','obj:trail'],
+    pos:{marcos:[21,38,'up']},
+    npcs:{
+      iracema:[
+        [['iracema','A trilha abriu hoje. Vai lá ver.'],['iracema','E chegou hóspede novo. Agora você não é mais o novato.'],['iracema','A floresta cuida da gente.']]
+      ],
+      bento:[
+        [['bento','Trinta e dois pães de queijo.'],['caio','Cadê a Rosa? O banco dela está vazio.'],['bento','Rosa?'],['bento','Não conheço nenhuma Rosa.'],['bento','Hoje sobrou um pão. Engraçado. Trinta e três.']]
+      ],
+      lucia:[
+        [['lucia','Toma. Colhi perto da trilha hoje cedo.'],['t','A flor tem cheiro de terra molhada. E de perfume. Perfume de mulher.'],['lucia','Ela se chama Rosa. Bonito nome, né?']]
+      ],
+      tobias:[
+        [['tobias','Tirei uma pessoa da pintura hoje.'],['tobias','Ela nunca esteve ali. Ficou mais bonito assim.'],['caio','A Rosa estava ali ontem.'],['tobias','Quem?']]
+      ],
+      marcos:[
+        [['marcos','E aí! Você é daqui?'],['caio','Não. Cheguei faz uns dias.'],['marcos','Eu vi um anúncio num ponto de ônibus, acredita? Larguei tudo.'],['marcos','Sou programador. Três anos sem férias.'],['marcos','Aqui ninguém tem pressa, né?'],['t','Ele já sabe a frase.']]
+      ],
+      dalva:[
+        [['dalva','A carta da Rosa saiu hoje. Pra irmã dela.'],['caio','Você lembra da Rosa?'],['dalva','Eu lembro de todo mundo que escreve.'],['dalva','E você, já escreveu?']]
+      ],
+      otavio:[
+        [['otavio','O buraco está ocupado.'],['caio','Por quem?'],['otavio','Ninguém precisa saber o nome. A floresta sabe.'],['otavio','Hoje o sino toca mais forte.']]
+      ],
+      ivo:[
+        [['ivo','O lago está mais fundo hoje.'],['ivo','Dá pra sentir pela linha.']]
+      ],
+      dog:[[['t','Biscoito não olha pra você.'],['t','Ele treme.']]]
+    },
+    notes:{'npc:bento':'A Rosa sumiu. Ninguém lembra dela.','npc:marcos':'Chegou um rapaz novo, Marcos. Viu o mesmo anúncio.','npc:dalva':'Só a Dalva lembra da Rosa. A carta dela saiu hoje.','obj:trail':'A trilha acaba numa clareira. Tinha uma flor amarela no chão. Eu sei o caminho. Como?','npc:lucia':'A Lúcia me deu uma flor chamada Rosa.'},
+    call:[['bia','Caio, eu tô preocupada. Você não responde ninguém.'],['caio','Desculpa. Fiz amizade com o pessoal.'],['bia','Você? Amizade em cinco dias?'],['caio','Aqui é diferente. Você ia gostar.'],['bia','Volta domingo. Por favor.'],['caio','Volto. Volto sim.'],['','(a ligação cai)']],
+    signal:1
+  },
+  6: {
+    sub:'Indo embora', spawn:[6,22,'down'], obj:'Vá embora: ônibus ou estrada',
+    tasks:['obj:bus','obj:road'],
+    pos:{marcos:[4,22,'down']},
+    npcs:{
+      iracema:[[['iracema','Indo embora? Assim, sem avisar?'],['iracema','Fica mais um pouco. Seu quarto não sai do lugar.']]],
+      bento:[[['bento','Trinta e três pães. Um é seu.'],['bento','Fica mais um pouco.']]],
+      lucia:[[['lucia','Já plantei a sua. Ficou bonita.'],['lucia','Não arranca, não. Dá azar.']]],
+      tobias:[[['tobias','Vai tentar a estrada? Vai. Todo mundo tenta.'],['tobias','Na volta eu te espero na praça. Com o pincel pronto.']]],
+      marcos:[[['marcos','Cara, eu dormi doze horas. Doze!'],['marcos','Acho que vou ficar mais um pouco.']]],
+      dalva:[[['dalva','Só falta o endereço, Caio.'],['caio','Que endereço?'],['dalva','Da Bia. Rua, número, CEP. Ela vai adorar a sua carta.'],['t','Eu nunca disse o CEP de ninguém.']]],
+      otavio:[[['otavio','Tem dia que a pessoa tenta ir.'],['otavio','O sino espera.']]],
+      ivo:[[['ivo','O ônibus? Não vem.'],['ivo','Quem dirigia era eu. Faz tempo que eu parei aqui.'],['ivo','Tinha gente dentro. Todo mundo desceu feliz.']]],
+      dog:[[['t','Biscoito dorme virado pra floresta.'],['t','Não acorda quando você chama.']]]
+    },
+    notes:{'obj:bus':'O ônibus não vem.','obj:road':'A estrada volta pra praça.','npc:ivo':'O ônibus não sai porque o motorista ficou.','npc:dalva':'Dalva quer o endereço da Bia.'},
+    call:[['','Chamando: Bia'],['','...'],['bia','Caio? Caio, fala comigo. Eu vou aí.'],['caio','Não precisa. Eu te escrevo.'],['','(sem sinal)']],
+    signal:0
+  },
+  7: {
+    sub:'Você acorda descansado. Como nunca.', spawn:[6,22,'down'], obj:'Aproveite o último dia',
+    tasks:['npc:iracema','npc:marcos','npc:dalva'], hideCount:true,
+    pos:{marcos:[22,24,'down']},
+    npcs:{
+      iracema:[[['iracema','Bom dia, Caio.'],['caio','Bom dia. Aqui ninguém tem pressa.'],['t','Eu não pretendia dizer isso.'],['iracema','Toma. A chave da sua casa. A azul, perto da estrada.']]],
+      bento:[[['bento','Trinta e três pães de queijo.'],['caio','Um é meu. Eu já sou de casa.']]],
+      lucia:[[['lucia','Uma flor pro moço...'],['lucia','Não. Pro moço daqui.'],['caio','A floresta cuida da gente.']]],
+      tobias:[[['tobias','Te coloquei de volta na pintura.'],['caio','Então eu fico mais um pouco.'],['tobias','Isso. Agora você entendeu.']]],
+      marcos:[[['marcos','Bom dia! Ainda não decorei o nome de todo mundo.'],['caio','Não precisa. Você já é de casa.'],['t','Eu sorrio. Não sei por quê.'],['marcos','Valeu, cara. Aqui é bom demais.']]],
+      dalva:[[['dalva','Recebi sua carta. Linda. Já vai sair.'],['caio','Que carta?'],['dalva','A que você escreveu ontem à noite. Pra Bia.'],['t','Eu não lembro de ter escrito.'],['t','Mas a letra é minha.']]],
+      otavio:[[['otavio','Hoje o sino toca pra você.']]],
+      ivo:[[['ivo','Mordeu! Pela primeira vez, mordeu.'],['t','O anzol volta vazio. Ele sorri mesmo assim.']]],
+      dog:[[['t','Biscoito rosna pra você.'],['t','Do mesmo jeito que rosnava pra floresta.']]]
+    },
+    notes:{},
+    startNote:{text:'Aqui ninguém tem pressa.', hand:true}
+  }
+};
+
+/* --------- objetos e lugares --------- */
+const T_EASEL = {1:'Uma praça pintada com cuidado. Uma mulher de blusa amarela no banco, olhando pra floresta.', 3:'O homem de camisa azul continua no banco, ao lado da mulher.', 4:'O homem de camisa azul agora tem rosto. O seu.', 5:'Onde estava a mulher, uma mancha de tinta.', 6:'Só o homem de camisa azul. Olhando pra floresta.', 7:'Só o homem de camisa azul. Ele sorri.'};
+const T_MURAL = {1:'Mural de fotos. Visitantes sorrindo na praça.', 2:'Mural de fotos. Visitantes sorrindo na praça.', 3:'Mural de fotos. Ninguém olha pra câmera. Todos olham pra floresta.', 5:'A foto da Rosa sumiu. Sobrou o alfinete.', 6:'A foto da Rosa sumiu. Sobrou o alfinete.', 7:'Tem uma foto nova no mural. Você, sorrindo.'};
+const T_FOUNTAIN = {1:'Água limpa. Algumas moedas no fundo.', 2:'Água limpa. Algumas moedas no fundo.', 3:'Muitas moedas. Como se todo mundo tivesse feito o mesmo pedido.', 4:'Muitas moedas. Como se todo mundo tivesse feito o mesmo pedido.', 5:'Muitas moedas. Como se todo mundo tivesse feito o mesmo pedido.', 6:'Você joga uma moeda. Pede pra ir embora.', 7:'Você joga uma moeda. Não lembra o que pediu.'};
+const T_LAKE = {1:'Água parada e escura. Nenhum peixe à vista.', 2:'Água parada e escura. Nenhum peixe à vista.', 3:'No reflexo, alguém pesca do outro lado do lago. Não tem ninguém do outro lado.', 4:'O lago está mais alto que ontem.', 5:'Por um segundo, o reflexo mostra uma mulher de blusa amarela.', 6:'Seu reflexo demora pra se mexer.', 7:'Seu reflexo sorri antes de você.'};
+const T_WELL = {1:'Você diz "oi" pro poço. O eco demora.', 2:'Você diz "oi" pro poço. O eco demora.', 3:'O eco responde com o seu nome.', 4:'O eco responde com o seu nome.', 5:'O eco responde: "fica".', 6:'O eco responde: "fica".', 7:'Você não precisa mais perguntar nada pro poço.'};
+const T_SIGN = {1:'"Bem-vindo a Vale Sereno. População: 211 e você."', 5:'"Bem-vindo a Vale Sereno. População: 212 e você."', 7:'"Bem-vindo a Vale Sereno. População: 213."'};
+const T_PHONE = {1:'Orelhão. Só dá sinal de ocupado.', 2:'Ocupado. Sempre ocupado.', 7:'Você nem tira o fone do gancho. Pra quem ia ligar?'};
+const T_HORTA = {1:'Abóboras enormes. A terra aqui é boa. Boa demais.', 5:'A terra da horta está remexida. Como se algo tivesse passado por baixo.'};
+const T_MAIL = {1:'Caixa de correio cheia até a boca.', 4:'Cartas com letras diferentes. Todas começam do mesmo jeito: "Desculpa a demora."', 7:'Uma carta com a sua letra. Endereçada à Bia.'};
+const T_VARAL = {1:'No varal: um terno, um uniforme de enfermeira, um macacão de motorista.', 7:'Uma camisa azul nova no varal. Do seu tamanho.'};
+const T_BUSH = 'Um arbusto aparado com perfeição. Tudo aqui é aparado com perfeição.';
+
+const GRAVES = {
+  '11,10':'Aqui chegou: Ana Lúcia Ferreira. 1987.',
+  '13,10':'Aqui chegou: Bento Salgado. 1991.',
+  '15,10':'Aqui chegou: Iracema Duarte. 1994.',
+  '11,12':'Aqui chegou: Ivo Ramos, motorista da linha 412. 2002.',
+  '13,12':'Aqui chegou: Tobias Martins. 2011.',
+  '15,12':'Aqui chegou: Rosa Alves. 2019.'
+};
+
+const DOORS = {
+  padaria:{1:'A padaria está fechada. Mas o cheiro de pão está sempre no ar.'},
+  flor:{1:'Pela janela, vasos e mais vasos. Cada um tem uma plaquinha com um nome.', 3:'Uma das plaquinhas diz "Caio". O vaso ainda está vazio.', 5:'O vaso com o seu nome tem um broto.', 7:'O vaso com o seu nome floresceu.'},
+  escola:{1:'Trancada. Pelo vidro, carteiras pequenas cobertas de poeira.'},
+  correio:{1:'Pela janela, pilhas de envelopes prontos. Nenhum tem selo.'},
+  pintor:{1:'Pela janela, dezenas de telas da mesma praça. Em cada uma, uma pessoa a mais.'},
+  capela:{1:'Os bancos da capela estão virados pra parede do fundo. A parede que dá pra floresta.'},
+  casa1:{1:'Uma casa arrumada demais. Na varanda, uma mala que nunca foi desfeita.'},
+  casa2:{1:'Casa azul, vazia. Os móveis estão cobertos com lençol. Parecem novos.', 7:'A porta está aberta. Na mesa, um prato. Na parede, a pintura do Tobias.'}
+};
+const byDay = (o, d) => { let v = null; for (let i = 1; i <= d; i++) if (o[i] !== undefined) v = o[i]; return v; };
+
+const LETTER = [
+  'Bia,',
+  'Desculpa a demora. O sinal aqui é ruim, mas eu tô ótimo. Melhor do que nunca.',
+  'Resolvi ficar mais um pouco. Aqui ninguém tem pressa.',
+  'Vem me ver. Você vai entender. A floresta cuida da gente.',
+  'Já arrumaram uma casa azul pra gente. Perto da estrada.',
+  'Te espero. Você já é de casa.',
+  'Caio'
+];
+
+/* ================= MOTOR ================= */
+const T = 16;
+function hash(x, y, k){
+  let h = (Math.imul(x, 374761393) + Math.imul(y, 668265263) + Math.imul(k, 1442695041)) | 0;
+  h = Math.imul(h ^ (h >>> 13), 1274126177);
+  h ^= h >>> 16;
+  return (h >>> 0) / 4294967296;
+}
+function px(g, c, x, y, w = 1, h = 1){ g.fillStyle = c; g.fillRect(x, y, w, h); }
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const $ = id => document.getElementById(id);
+
+/* ---------- MAPA (gerado) ---------- */
+const MW = 40, MH = 46;
+const MAP = Array.from({length:MH}, () => Array(MW).fill('.'));
+const setT = (x, y, c) => { if (x >= 0 && y >= 0 && x < MW && y < MH) MAP[y][x] = c; };
+const fillT = (x0, y0, x1, y1, c) => { for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) setT(x, y, c); };
+const tileAt = (x, y) => (x < 0 || y < 0 || x >= MW || y >= MH) ? null : MAP[y][x];
+const BLD = [];
+function bldg(name, x, y, w, h, door, wins, pathTo){
+  BLD.push({name, x, y, w, h, door});
+  fillT(x, y, x + w - 1, y + 1, 'R');
+  fillT(x, y + 2, x + w - 1, y + h - 1, 'H');
+  wins.forEach(c => setT(c, y + 2, 'W'));
+  setT(door, y + h - 1, name === 'pousada' ? 'P' : 'D');
+  if (pathTo) fillT(door, y + h, door, pathTo, '=');
+}
+const bAt = (tx, ty) => BLD.find(b => tx >= b.x && tx < b.x + b.w && ty >= b.y && ty < b.y + b.h);
+(function buildMap(){
+  fillT(0, 0, MW - 1, 5, 'F');
+  for (let y = 6; y < MH; y++){ setT(0, y, 'T'); setT(MW - 1, y, 'T'); }
+  for (let x = 1; x < MW - 1; x++) if (hash(x, 6, 1) > 0.5) setT(x, 6, 'T');
+  for (let y = 7; y < 40; y++) for (let x = 1; x < MW - 1; x++) if (hash(x, y, 3) > 0.92) setT(x, y, ',');
+  fillT(0, 43, MW - 1, MH - 1, 'T');
+  fillT(0, 40, MW - 1, 41, 'r');
+  fillT(1, 42, MW - 2, 42, '.');
+  // caminhos
+  fillT(19, 1, 20, 39, '=');
+  fillT(3, 16, 36, 16, '='); fillT(3, 26, 36, 26, '='); fillT(3, 35, 36, 35, '=');
+  // lago e píer
+  fillT(26, 7, 37, 14, 'L'); fillT(31, 9, 31, 15, 'p');
+  setT(25, 8, 'T'); setT(38, 15, 'T'); setT(26, 15, 'b');
+  // capela e cemitério
+  bldg('capela', 3, 7, 7, 4, 6, [4, 8], 15);
+  fillT(10, 8, 16, 8, 'x'); fillT(10, 14, 16, 14, 'x'); fillT(10, 8, 10, 14, 'x'); fillT(16, 8, 16, 14, 'x');
+  fillT(11, 9, 15, 13, '.');
+  setT(13, 14, '='); setT(13, 15, '=');
+  [[11,10],[13,10],[15,10],[11,12],[13,12],[15,12]].forEach(([x, y]) => setT(x, y, 'g'));
+  // praça
+  fillT(15, 17, 24, 24, '=');
+  fillT(19, 20, 20, 21, 'w');
+  [[16,18],[23,18],[16,23],[23,23]].forEach(([x, y]) => setT(x, y, 'B'));
+  fillT(14, 18, 14, 23, 'f'); fillT(25, 18, 25, 23, 'f');
+  // quarteirão norte
+  bldg('pousada', 3, 18, 8, 4, 6, [4, 9], 25);
+  fillT(7, 23, 10, 24, 'h');
+  bldg('padaria', 29, 18, 7, 4, 32, [30, 34], 25);
+  // quarteirão sul
+  bldg('flor', 3, 27, 7, 4, 6, [4, 8], 34);
+  fillT(3, 32, 5, 33, 'f'); fillT(7, 32, 9, 33, 'f');
+  bldg('escola', 11, 27, 7, 4, 14, [12, 16], 34);
+  bldg('correio', 22, 27, 6, 4, 24, [26], 34);
+  bldg('pintor', 30, 27, 7, 4, 33, [31, 35], 34);
+  setT(16, 32, 'O');
+  setT(28, 32, 'v'); setT(29, 32, 'v');
+  // beira da estrada
+  bldg('casa1', 3, 36, 6, 4, 5, [7], 0);
+  bldg('casa2', 30, 36, 6, 4, 32, [34], 0);
+  setT(15, 39, 'Y'); setT(22, 39, 'A'); setT(23, 39, 'S'); setT(26, 39, 'o');
+  [[12,21],[27,21],[2,24],[37,33],[11,34],[27,37],[12,38]].forEach(([x, y]) => setT(x, y, 'b'));
+  setT(0, 40, 'r'); setT(MW - 1, 40, 'r'); setT(0, 41, 'r'); setT(MW - 1, 41, 'r');
+})();
+const PASS = new Set(['.', ',', '=', 'f', 'r', 'p']);
+const WATER_TILES = [];
+for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) if (MAP[y][x] === 'L' || MAP[y][x] === 'w') WATER_TILES.push([x, y]);
+
+/* ---------- CORES ---------- */
+const C = {
+  grass:'#6fa24a', grassD:'#5b8c3c', grassL:'#86b85c',
+  path:'#c8a36a', pathD:'#b08b55', pathL:'#d8b780',
+  trunk:'#6b4a2b', leaf:'#3f7a35', leafD:'#2e5d28', leafL:'#5a9a4a',
+  fground:'#13201a', fleaf:'#1f3a27', fleafD:'#162b1d', fleafL:'#2b4d33',
+  beam:'#8a6a45', frame:'#5e4128', glass:'#f2d27a', glassL:'#fff0b8',
+  door:'#7a4f2c', doorD:'#553620', knob:'#e0c060',
+  water:'#4c9bcc', waterD:'#3b82b0', waterL:'#9fd6f2', stone:'#aaa59a', stoneD:'#8a857b', sand:'#cdb683',
+  wood:'#93623a', woodD:'#6a4428', plank:'#a9784a',
+  fence:'#a07a4c', fenceD:'#765631',
+  road:'#4a4b52', roadL:'#56575e', curb:'#9a978e', line:'#ddd5b5',
+  soil:'#6b4a30', soilD:'#553a25', pumpkin:'#e08a3a'
+};
+const BPAL = {
+  pousada:{roof:['#b5533c','#8e3e2c','#cc6a50'], wall:['#e9dcc0','#cbbc9c']},
+  padaria:{roof:['#c98d3a','#a1702a','#dca451'], wall:['#efe0c2','#d1c09e']},
+  flor:{roof:['#b45c7a','#8f4762','#c97391'], wall:['#efe3d4','#d3c4b2']},
+  pintor:{roof:['#4f6f8f','#3c5671','#6585a5'], wall:['#e6dcc6','#c9bea6']},
+  capela:{roof:['#5f5c69','#4a4753','#77748a'], wall:['#b9b3a6','#9c968a'], stone:true},
+  escola:{roof:['#7c6a4a','#5f5036','#958262'], wall:['#d8cdb2','#bcb196']},
+  correio:{roof:['#3f7a74','#2f5f5a','#57928b'], wall:['#e9dcc0','#cbbc9c']},
+  casa1:{roof:['#8a6a8a','#6e536e','#a283a2'], wall:['#e6dccb','#c9bfae']},
+  casa2:{roof:['#3f63a8','#2f4c84','#5a7cc0'], wall:['#dfe6ee','#c3ccd8']}
+};
+const FLOWERS = ['#e86a6a','#f2d05a','#ece6f2','#b77ae0','#f29a5a'];
+
+/* ---------- CAMADA ESTÁTICA ---------- */
+const staticCv = document.createElement('canvas');
+staticCv.width = MW * T; staticCv.height = MH * T;
+const sg = staticCv.getContext('2d');
+const isBldCh = ch => ch === 'H' || ch === 'W' || ch === 'D' || ch === 'P';
+
+function drawGrass(g, X, Y, tx, ty){
+  px(g, C.grass, X, Y, 16, 16);
+  for (let i = 0; i < 7; i++){
+    const a = hash(tx, ty, i), b = hash(tx, ty, i + 31);
+    if (i < 5) px(g, C.grassD, X + Math.floor(a * 15), Y + Math.floor(b * 14), 1, 2);
+    else px(g, C.grassL, X + Math.floor(a * 15), Y + Math.floor(b * 15));
+  }
+}
+function drawPath(g, X, Y, tx, ty){
+  px(g, C.path, X, Y, 16, 16);
+  for (let i = 0; i < 4; i++){
+    const a = hash(tx, ty, i + 7), b = hash(tx, ty, i + 55);
+    px(g, i < 3 ? C.pathD : C.pathL, X + Math.floor(a * 14), Y + Math.floor(b * 14), 2, 1);
+  }
+}
+function drawWall(g, X, Y, tx, ty){
+  const b = bAt(tx, ty), p = BPAL[b ? b.name : 'pousada'];
+  px(g, p.wall[0], X, Y, 16, 16);
+  if (p.stone){
+    for (let r = 0; r < 16; r += 4){
+      px(g, p.wall[1], X, Y + r + 3, 16, 1);
+      for (let c = ((r / 4 + tx) % 2) * 4; c < 16; c += 8) px(g, p.wall[1], X + c, Y + r, 1, 3);
+    }
+  } else px(g, p.wall[1], X, Y + 13, 16, 3);
+  if (tileAt(tx, ty - 1) === 'R') px(g, 'rgba(0,0,0,.18)', X, Y, 16, 3);
+  if (!p.stone){
+    if (!isBldCh(tileAt(tx - 1, ty))) px(g, C.beam, X, Y, 2, 16);
+    if (!isBldCh(tileAt(tx + 1, ty))) px(g, C.beam, X + 14, Y, 2, 16);
+  }
+}
+function waterEdges(g, X, Y, tx, ty, isW){
+  const l = isW(tileAt(tx - 1, ty)), r = isW(tileAt(tx + 1, ty)), u = isW(tileAt(tx, ty - 1)), d = isW(tileAt(tx, ty + 1));
+  return {x0:l ? 0 : 3, x1:r ? 16 : 13, y0:u ? 0 : 3, y1:d ? 16 : 13, l, r, u, d};
+}
+function drawTile(g, ch, tx, ty){
+  const X = tx * T, Y = ty * T;
+  switch (ch){
+    case '.': drawGrass(g, X, Y, tx, ty); break;
+    case ',':
+      drawGrass(g, X, Y, tx, ty);
+      px(g, C.grassD, X + 5, Y + 8, 1, 3); px(g, C.grassD, X + 7, Y + 6, 1, 5); px(g, C.grassD, X + 9, Y + 8, 1, 3);
+      break;
+    case 'f':
+      drawGrass(g, X, Y, tx, ty);
+      for (let i = 0; i < 5; i++){
+        const a = hash(tx, ty, i + 90), b = hash(tx, ty, i + 120), c = FLOWERS[Math.floor(hash(tx, ty, i + 150) * FLOWERS.length)];
+        const fx = X + 1 + Math.floor(a * 12), fy = Y + 1 + Math.floor(b * 12);
+        px(g, C.grassD, fx + 1, fy + 2, 1, 2); px(g, c, fx, fy, 3, 2); px(g, '#fff6c8', fx + 1, fy);
+      }
+      break;
+    case '=': drawPath(g, X, Y, tx, ty); break;
+    case 'T':
+      drawGrass(g, X, Y, tx, ty);
+      px(g, 'rgba(0,0,0,.2)', X + 3, Y + 13, 11, 3);
+      px(g, C.trunk, X + 6, Y + 10, 4, 6);
+      px(g, C.leaf, X + 2, Y + 1, 12, 10); px(g, C.leaf, X + 1, Y + 3, 14, 6);
+      px(g, C.leafD, X + 1, Y + 8, 14, 2); px(g, C.leafD, X + 3, Y + 10, 10, 1);
+      px(g, C.leafL, X + 4, Y + 2, 4, 2); px(g, C.leafL, X + 3, Y + 4, 2, 2);
+      for (let i = 0; i < 3; i++) px(g, C.leafD, X + 3 + Math.floor(hash(tx, ty, i + 200) * 10), Y + 3 + Math.floor(hash(tx, ty, i + 220) * 5));
+      break;
+    case 'b':
+      drawGrass(g, X, Y, tx, ty);
+      px(g, 'rgba(0,0,0,.2)', X + 2, Y + 12, 12, 3);
+      px(g, C.leafD, X + 2, Y + 4, 12, 9); px(g, C.leaf, X + 3, Y + 3, 10, 8); px(g, C.leafL, X + 5, Y + 4, 3, 2);
+      break;
+    case 'F':
+      g.save(); g.beginPath(); g.rect(X, Y, 16, 16); g.clip();
+      px(g, C.fground, X, Y, 16, 16);
+      for (let i = 0; i < 3; i++){
+        const cx = X - 4 + Math.floor(hash(tx, ty, i + 300) * 16), cy = Y - 4 + Math.floor(hash(tx, ty, i + 330) * 16);
+        px(g, C.fleafD, cx, cy + 2, 12, 8); px(g, C.fleaf, cx + 1, cy, 10, 8); px(g, C.fleaf, cx, cy + 2, 12, 4);
+        px(g, C.fleafL, cx + 3, cy + 1, 3, 1);
+      }
+      g.restore();
+      break;
+    case 'R': {
+      const b = bAt(tx, ty), k = BPAL[b ? b.name : 'pousada'].roof;
+      px(g, k[0], X, Y, 16, 16);
+      for (let r = 0; r < 16; r += 4){
+        px(g, k[1], X, Y + r + 3, 16, 1);
+        for (let c = ((r / 4 + ty) % 2) * 4; c < 16; c += 8) px(g, k[1], X + c, Y + r, 1, 3);
+      }
+      if (tileAt(tx, ty - 1) !== 'R') px(g, k[2], X, Y, 16, 2);
+      if (tileAt(tx, ty + 1) !== 'R'){ px(g, k[1], X, Y + 13, 16, 3); px(g, 'rgba(0,0,0,.25)', X, Y + 15, 16, 1); }
+      if (tileAt(tx - 1, ty) !== 'R') px(g, k[1], X, Y, 1, 16);
+      if (tileAt(tx + 1, ty) !== 'R') px(g, k[1], X + 15, Y, 1, 16);
+      break;
+    }
+    case 'H': drawWall(g, X, Y, tx, ty); break;
+    case 'W': {
+      drawWall(g, X, Y, tx, ty);
+      const b = bAt(tx, ty);
+      px(g, C.frame, X + 3, Y + 2, 10, 10);
+      if (b && b.name === 'escola'){
+        px(g, '#2a2620', X + 4, Y + 3, 8, 8);
+        px(g, C.plank, X + 3, Y + 4, 10, 2); px(g, C.plank, X + 3, Y + 8, 10, 2);
+      } else if (b && b.name === 'capela'){
+        px(g, '#6f87b0', X + 4, Y + 3, 8, 8); px(g, '#b04a4a', X + 4, Y + 3, 4, 4); px(g, '#d8b25a', X + 8, Y + 7, 4, 4);
+        px(g, C.frame, X + 7, Y + 3, 2, 8); px(g, C.frame, X + 4, Y + 6, 8, 2);
+      } else {
+        const lit = !(b && (b.name === 'casa1' || b.name === 'casa2'));
+        px(g, lit ? C.glass : '#3a4048', X + 4, Y + 3, 8, 8);
+        px(g, C.frame, X + 7, Y + 3, 2, 8); px(g, C.frame, X + 4, Y + 6, 8, 1);
+        if (lit) px(g, C.glassL, X + 5, Y + 4, 2, 1);
+      }
+      break;
+    }
+    case 'D': case 'P':
+      drawWall(g, X, Y, tx, ty);
+      px(g, C.doorD, X + 3, Y + 1, 10, 15); px(g, C.door, X + 4, Y + 2, 8, 14);
+      px(g, C.doorD, X + 7, Y + 2, 2, 14); px(g, C.knob, X + 10, Y + 9);
+      if (ch === 'P'){ px(g, C.glass, X + 5, Y + 4, 2, 3); px(g, C.glass, X + 9, Y + 4, 2, 3); }
+      break;
+    case 'w': {
+      px(g, C.stone, X, Y, 16, 16);
+      const e = waterEdges(g, X, Y, tx, ty, c => c === 'w');
+      px(g, C.water, X + e.x0, Y + e.y0, e.x1 - e.x0, e.y1 - e.y0);
+      if (!e.u) px(g, C.stoneD, X, Y, 16, 1);
+      if (!e.d) px(g, C.stoneD, X, Y + 15, 16, 1);
+      break;
+    }
+    case 'L': {
+      drawGrass(g, X, Y, tx, ty);
+      const e = waterEdges(g, X, Y, tx, ty, c => c === 'L' || c === 'p');
+      px(g, C.sand, X + Math.max(0, e.x0 - 2), Y + Math.max(0, e.y0 - 2), e.x1 - e.x0 + (e.l ? 0 : 2) + (e.r ? 0 : 2), e.y1 - e.y0 + (e.u ? 0 : 2) + (e.d ? 0 : 2));
+      px(g, C.waterD, X + e.x0, Y + e.y0, e.x1 - e.x0, e.y1 - e.y0);
+      px(g, C.water, X + e.x0 + (e.l ? 0 : 1), Y + e.y0 + (e.u ? 0 : 1), e.x1 - e.x0 - (e.l ? 0 : 1) - (e.r ? 0 : 1), e.y1 - e.y0 - (e.u ? 0 : 1) - (e.d ? 0 : 1));
+      if (hash(tx, ty, 9) > .7) px(g, C.waterD, X + 4 + Math.floor(hash(tx, ty, 10) * 6), Y + 6, 5, 1);
+      break;
+    }
+    case 'p':
+      if (tileAt(tx, ty + 1) === '=') drawGrass(g, X, Y, tx, ty);
+      else { px(g, C.water, X, Y, 16, 16); }
+      px(g, C.woodD, X + 2, Y, 12, 16);
+      for (let r = 0; r < 16; r += 4){ px(g, C.plank, X + 3, Y + r, 10, 3); }
+      px(g, C.woodD, X + 1, Y + 14, 2, 2); px(g, C.woodD, X + 13, Y + 14, 2, 2);
+      break;
+    case 'B':
+      drawPath(g, X, Y, tx, ty);
+      px(g, C.woodD, X + 2, Y + 9, 2, 5); px(g, C.woodD, X + 12, Y + 9, 2, 5);
+      px(g, C.wood, X + 1, Y + 2, 14, 2); px(g, C.wood, X + 1, Y + 6, 14, 3); px(g, C.woodD, X + 1, Y + 9, 14, 1);
+      px(g, C.woodD, X + 2, Y + 4, 1, 2); px(g, C.woodD, X + 13, Y + 4, 1, 2);
+      break;
+    case 'x':
+      drawGrass(g, X, Y, tx, ty);
+      if (tileAt(tx - 1, ty) === 'x' || tileAt(tx + 1, ty) === 'x'){ px(g, C.fence, X, Y + 5, 16, 2); px(g, C.fence, X, Y + 10, 16, 2); }
+      if (tileAt(tx, ty - 1) === 'x' || tileAt(tx, ty + 1) === 'x') px(g, C.fence, X + 7, Y, 2, 16);
+      px(g, C.fenceD, X + 6, Y + 2, 4, 12);
+      break;
+    case 'g':
+      drawGrass(g, X, Y, tx, ty);
+      px(g, 'rgba(0,0,0,.18)', X + 3, Y + 13, 11, 2);
+      px(g, '#8b877f', X + 4, Y + 3, 8, 11); px(g, '#a39f96', X + 5, Y + 2, 6, 11); px(g, '#a39f96', X + 4, Y + 4, 8, 9);
+      px(g, '#7a766e', X + 6, Y + 6, 4, 1); px(g, '#7a766e', X + 6, Y + 8, 3, 1); px(g, '#7a766e', X + 6, Y + 10, 4, 1);
+      px(g, '#4f7a3a', X + 3, Y + 12, 3, 2); px(g, '#4f7a3a', X + 10, Y + 13, 3, 1);
+      break;
+    case 'h':
+      px(g, C.soil, X, Y, 16, 16);
+      for (let r = 2; r < 16; r += 5) px(g, C.soilD, X, Y + r, 16, 1);
+      for (let i = 0; i < 2; i++){
+        const ax = X + 1 + Math.floor(hash(tx, ty, i + 70) * 9), ay = Y + 2 + i * 7;
+        px(g, '#4f7a3a', ax + 2, ay - 1, 2, 2); px(g, C.pumpkin, ax, ay, 6, 4); px(g, '#c06f2a', ax + 2, ay, 1, 4);
+      }
+      break;
+    case 'O':
+      drawGrass(g, X, Y, tx, ty);
+      px(g, C.woodD, X + 2, Y - 6, 2, 12); px(g, C.woodD, X + 12, Y - 6, 2, 12);
+      px(g, '#8e3e2c', X, Y - 9, 16, 4); px(g, '#b5533c', X + 1, Y - 9, 14, 2);
+      px(g, C.stoneD, X + 1, Y + 4, 14, 11); px(g, C.stone, X + 2, Y + 4, 12, 9);
+      px(g, '#14181c', X + 4, Y + 5, 8, 5);
+      break;
+    case 'v': {
+      drawGrass(g, X, Y, tx, ty);
+      const left = tileAt(tx - 1, ty) !== 'v';
+      px(g, C.woodD, left ? X + 1 : X + 13, Y - 6, 2, 21);
+      px(g, '#e8e2d2', X, Y - 5, 16, 1);
+      if (left){ px(g, '#2b2f3a', X + 4, Y - 4, 5, 9); px(g, '#1f2229', X + 6, Y - 4, 1, 4); px(g, '#eef0f2', X + 10, Y - 4, 5, 8); }
+      else { px(g, '#3f5f8a', X + 2, Y - 4, 6, 10); px(g, '#2f4a6e', X + 3, Y + 1, 1, 5); px(g, '#2f4a6e', X + 6, Y + 1, 1, 5); }
+      break;
+    }
+    case 'r':
+      px(g, C.road, X, Y, 16, 16);
+      for (let i = 0; i < 3; i++) px(g, C.roadL, X + Math.floor(hash(tx, ty, i + 400) * 15), Y + Math.floor(hash(tx, ty, i + 430) * 15));
+      if (ty === 40){ px(g, C.curb, X, Y, 16, 2); if (tx % 2 === 0) px(g, C.line, X + 3, Y + 15, 10, 1); }
+      if (ty === 41 && tx % 2 === 0) px(g, C.line, X + 3, Y, 10, 1);
+      break;
+    case 'A':
+      drawGrass(g, X, Y, tx, ty);
+      px(g, C.woodD, X + 3, Y + 6, 2, 10); px(g, C.woodD, X + 11, Y + 6, 2, 10);
+      px(g, '#2b2824', X, Y - 6, 16, 14);
+      px(g, '#f2c75a', X + 1, Y - 5, 14, 12);
+      px(g, '#e8743a', X + 10, Y - 4, 3, 3);
+      px(g, '#5c9a4a', X + 1, Y + 2, 14, 5); px(g, '#3f7a35', X + 1, Y + 5, 14, 2);
+      px(g, '#2b2824', X + 2, Y - 3, 6, 1); px(g, '#2b2824', X + 2, Y - 1, 4, 1);
+      break;
+    case 'S':
+      drawGrass(g, X, Y, tx, ty);
+      px(g, 'rgba(0,0,0,.2)', X + 5, Y + 14, 7, 2);
+      px(g, '#8a8f96', X + 7, Y - 3, 2, 18);
+      px(g, '#2f5f9e', X + 3, Y - 9, 10, 8); px(g, '#e9edf2', X + 5, Y - 7, 6, 3); px(g, '#2f5f9e', X + 6, Y - 6); px(g, '#2f5f9e', X + 9, Y - 6);
+      break;
+    case 'Y':
+      drawGrass(g, X, Y, tx, ty);
+      px(g, C.woodD, X + 1, Y - 2, 2, 17); px(g, C.woodD, X + 13, Y - 2, 2, 17);
+      px(g, C.woodD, X - 4, Y - 12, 24, 13); px(g, '#e9dcc0', X - 3, Y - 11, 22, 11);
+      px(g, '#3f7a35', X - 1, Y - 9, 18, 2); px(g, '#6a4428', X, Y - 5, 15, 1); px(g, '#6a4428', X + 2, Y - 3, 11, 1);
+      break;
+    case 'o':
+      drawGrass(g, X, Y, tx, ty);
+      px(g, 'rgba(0,0,0,.2)', X + 4, Y + 13, 9, 2);
+      px(g, '#7a7f86', X + 7, Y - 2, 2, 16);
+      px(g, '#c85a22', X + 1, Y - 10, 14, 10); px(g, '#e07a2a', X + 2, Y - 11, 12, 9); px(g, '#f09a4a', X + 4, Y - 10, 4, 2);
+      px(g, '#2a2c30', X + 5, Y - 5, 6, 5); px(g, '#cfd3d8', X + 6, Y - 4, 2, 3);
+      break;
+    default: drawGrass(g, X, Y, tx, ty);
+  }
+}
+function buildStatic(){
+  for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) drawTile(sg, MAP[y][x], x, y);
+  // fonte
+  const fx = 20 * T, fy = 21 * T;
+  px(sg, C.stoneD, fx - 4, fy - 3, 8, 7); px(sg, C.stone, fx - 3, fy - 4, 6, 6);
+  px(sg, C.stone, fx - 1, fy - 10, 2, 7); px(sg, C.waterL, fx - 1, fy - 12, 2, 2);
+  // cruz da capela
+  px(sg, '#d9d2c2', 6 * T + 7, 7 * T - 9, 2, 11); px(sg, '#d9d2c2', 6 * T + 4, 7 * T - 6, 8, 2);
+  // placas das lojas
+  const sign = (tx, ty, bg, draw) => { const X = tx * T, Y = ty * T; px(sg, C.woodD, X + 1, Y - 2, 14, 8); px(sg, bg, X + 2, Y - 1, 12, 6); draw(X, Y); };
+  sign(32, 20, '#f2e6c8', (X, Y) => { px(sg, '#c98d3a', X + 4, Y, 8, 3); px(sg, '#a1702a', X + 5, Y + 1, 1, 1); px(sg, '#a1702a', X + 8, Y + 1, 1, 1); });
+  sign(24, 29, '#f2e6c8', (X, Y) => { px(sg, '#3f7a74', X + 4, Y, 8, 4); px(sg, '#f2e6c8', X + 5, Y + 1, 6, 1); });
+  sign(6, 29, '#f2e6c8', (X, Y) => { px(sg, '#e86a8a', X + 6, Y, 3, 3); px(sg, '#3f7a35', X + 7, Y + 3, 1, 1); });
+  sign(14, 29, '#f2e6c8', (X, Y) => { px(sg, '#5e4128', X + 4, Y, 8, 1); px(sg, '#5e4128', X + 4, Y + 2, 6, 1); });
+  sign(33, 29, '#f2e6c8', (X, Y) => { px(sg, '#4f6f8f', X + 4, Y, 3, 3); px(sg, '#b5533c', X + 7, Y + 1, 3, 2); px(sg, '#d8b25a', X + 10, Y, 2, 2); });
+}
+
+/* ---------- PERSONAGENS ---------- */
+const CH = {
+  caio:   {hair:'#2b2522', skin:'#e0b48c', shirt:'#3f63a8', shirtD:'#2f4c84', pants:'#3b3f48', shoe:'#1d1f24', style:'short'},
+  iracema:{hair:'#5a3d2b', skin:'#d9a57c', shirt:'#8a4a5c', shirtD:'#6e3a49', pants:'#6e3a49', shoe:'#3a2a24', style:'bun', dress:true, smile:true, apron:'#efe6d6'},
+  bento:  {hair:'#4a3527', skin:'#c98e62', shirt:'#c9b48e', shirtD:'#a8946f', pants:'#5a4a3a', shoe:'#2a201a', style:'bald', apron:'#f2eee4', smile:true, mustache:true},
+  lucia:  {hair:'#7a3b1e', skin:'#ebc29c', shirt:'#6f9a63', shirtD:'#557a4b', pants:'#557a4b', shoe:'#3a2a24', style:'long', dress:true, flower:'#e86a8a', smile:true},
+  tobias: {hair:'#1f1d1c', skin:'#b07a52', shirt:'#d8d0bf', shirtD:'#b5ab97', pants:'#384a5e', shoe:'#1d1f24', style:'beret', beret:'#a8473a', smile:true, paint:true},
+  rosa:   {hair:'#3a2418', skin:'#e6b892', shirt:'#d9b440', shirtD:'#b8952e', pants:'#4b4f6b', shoe:'#24222a', style:'long'},
+  dalva:  {hair:'#6b2f24', skin:'#e2b28a', shirt:'#2f3f6b', shirtD:'#243155', pants:'#2f3f6b', shoe:'#1d1f24', style:'bob', glasses:true, dress:true, smile:true, badge:'#d8b25a'},
+  otavio: {hair:'#141414', skin:'#a87850', shirt:'#2a2a2e', shirtD:'#1c1c20', pants:'#2a2a2e', shoe:'#141414', style:'short', flat:true, tall:true},
+  ivo:    {hair:'#5a4632', skin:'#c48a60', shirt:'#9a4038', shirtD:'#7a3028', pants:'#4a5a3a', shoe:'#2a201a', style:'hat', hat:'#8a7a50', beard:'#5a4632', smile:true},
+  marcos: {hair:'#4a3020', skin:'#d6a07a', shirt:'#5d6470', shirtD:'#4a505a', pants:'#2f3a52', shoe:'#e8e8e8', style:'curly', glasses:true, pack:'#a8473a', smile:true},
+  bia:    {hair:'#5a3a26', skin:'#d9a57c', shirt:'#c86a4a', shirtD:'#a85638', pants:'#2f3a52', shoe:'#1d1f24', style:'pony'}
+};
+function drawChar(g, X, Y, c, dir, frame, bob, smile){
+  const o = Y - 10 + bob - (c.tall ? 1 : 0);
+  px(g, 'rgba(0,0,0,.22)', X + 3, Y + 14, 10, 2);
+  const lA = frame === 1 ? 1 : 0, lB = frame === 2 ? 1 : 0;
+  const side = dir === 'left' || dir === 'right';
+  if (c.pack && !side && dir === 'down') px(g, c.pack, X + 3, o + 10, 10, 2);
+  if (c.dress){
+    px(g, c.pants, X + 4, o + 17, 8, 4);
+    px(g, c.skin, X + 5, o + 21, 2, 3 - lA); px(g, c.skin, X + 9, o + 21, 2, 3 - lB);
+  } else {
+    px(g, c.pants, X + 4, o + 17, 8, 3 + (c.tall ? 1 : 0));
+    px(g, c.pants, X + 4, o + 20, 3, 4 - lA); px(g, c.pants, X + 9, o + 20, 3, 4 - lB);
+  }
+  px(g, c.shoe, X + 4, o + 24 - lA, 3, 2); px(g, c.shoe, X + 9, o + 24 - lB, 3, 2);
+  px(g, c.shirt, X + 3, o + 10, 10, 8); px(g, c.shirtD, X + 3, o + 16, 10, 1);
+  if (side){
+    px(g, c.shirtD, X + 7, o + 11, 3, 5); px(g, c.skin, X + 7, o + 16, 3, 2);
+    if (c.pack) px(g, c.pack, dir === 'left' ? X + 11 : X + 2, o + 11, 3, 6);
+  } else {
+    px(g, c.shirtD, X + 2, o + 11, 2, 5); px(g, c.shirtD, X + 12, o + 11, 2, 5);
+    px(g, c.skin, X + 2, o + 16, 2, 2); px(g, c.skin, X + 12, o + 16, 2, 2);
+    if (c.pack && dir === 'up') px(g, c.pack, X + 4, o + 11, 8, 7);
+  }
+  if (c.apron && dir !== 'up') px(g, c.apron, X + 5, o + 12, 6, 8);
+  if (c.badge && dir === 'down') px(g, c.badge, X + 9, o + 12, 2, 2);
+  if (c.paint && dir === 'right'){ px(g, C.woodD, X + 10, o + 13, 5, 1); px(g, '#4c9bcc', X + 15, o + 12, 1, 2); }
+  px(g, c.skin, X + 6, o + 9, 4, 1);
+  px(g, c.skin, X + 4, o + 2, 8, 8);
+  const h = c.hair;
+  if (c.style === 'bald'){
+    if (dir === 'up') px(g, h, X + 4, o + 5, 8, 4);
+    else { px(g, h, X + 4, o + 4, 1, 3); px(g, h, X + 11, o + 4, 1, 3); }
+  } else {
+    if (dir === 'up') px(g, h, X + 4, o + 1, 8, 8);
+    else {
+      px(g, h, X + 4, o + 1, 8, 3);
+      if (dir === 'down'){ px(g, h, X + 4, o + 4, 1, 2); px(g, h, X + 11, o + 4, 1, 2); }
+      if (dir === 'left') px(g, h, X + 8, o + 4, 4, 3);
+      if (dir === 'right') px(g, h, X + 4, o + 4, 4, 3);
+    }
+    if (c.style === 'long'){
+      if (dir === 'up') px(g, h, X + 3, o + 1, 10, 12);
+      else { px(g, h, X + 3, o + 3, 1, 9); px(g, h, X + 12, o + 3, 1, 9); }
+    }
+    if (c.style === 'bob'){
+      if (dir === 'up') px(g, h, X + 3, o + 1, 10, 9);
+      else { px(g, h, X + 3, o + 2, 2, 7); px(g, h, X + 11, o + 2, 2, 7); }
+    }
+    if (c.style === 'curly'){ px(g, h, X + 3, o, 10, 3); px(g, h, X + 3, o + 3, 1, 2); px(g, h, X + 12, o + 3, 1, 2); px(g, h, X + 5, o - 1, 2, 1); px(g, h, X + 9, o - 1, 2, 1); }
+    if (c.style === 'bun') px(g, h, X + 6, o - 1, 4, 3);
+    if (c.style === 'pony' && dir !== 'down') px(g, h, dir === 'left' ? X + 11 : X + 2, o + 3, 3, 6);
+    if (c.style === 'pony' && dir === 'up') px(g, h, X + 7, o + 8, 2, 5);
+    if (c.style === 'beret'){ px(g, c.beret, X + 3, o, 10, 3); px(g, c.beret, X + 10, o - 1, 3, 2); }
+    if (c.style === 'hat'){ px(g, c.hat, X + 4, o - 1, 8, 3); px(g, c.hat, X + 2, o + 2, 12, 1); }
+  }
+  if (c.flower && dir !== 'right') px(g, c.flower, X + 10, o + 1, 2, 2);
+  const eye = '#1b1512';
+  if (dir === 'down'){
+    if (c.beard) px(g, c.beard, X + 4, o + 7, 8, 3);
+    if (c.glasses){ px(g, '#2a2a2a', X + 5, o + 4, 3, 1); px(g, '#2a2a2a', X + 8, o + 4, 3, 1); px(g, '#cfe0ea', X + 5, o + 5, 2, 2); px(g, '#cfe0ea', X + 9, o + 5, 2, 2); }
+    px(g, eye, X + 6, o + 5, 1, 2); px(g, eye, X + 9, o + 5, 1, 2);
+    if (c.mustache) px(g, h, X + 6, o + 8, 4, 1);
+    else if (c.flat) px(g, '#5a3020', X + 6, o + 8, 4, 1);
+    else if (smile && !c.beard){ px(g, '#7a3a30', X + 6, o + 8, 4, 1); px(g, '#7a3a30', X + 5, o + 7); px(g, '#7a3a30', X + 10, o + 7); }
+  }
+  if (dir === 'left'){ px(g, eye, X + 5, o + 5, 1, 2); if (c.glasses) px(g, '#2a2a2a', X + 4, o + 4, 3, 1); if (c.beard) px(g, c.beard, X + 4, o + 7, 4, 3); }
+  if (dir === 'right'){ px(g, eye, X + 10, o + 5, 1, 2); if (c.glasses) px(g, '#2a2a2a', X + 9, o + 4, 3, 1); if (c.beard) px(g, c.beard, X + 8, o + 7, 4, 3); }
+}
+function drawDog(g, X, Y, dir, now, state){
+  const flip = dir === 'left';
+  const d = (rx, ry, w, h, c) => px(g, c, flip ? X + 16 - rx - w : X + rx, Y + ry, w, h);
+  const body = '#c9935a', dark = '#a8743f', light = '#e2b47c';
+  px(g, 'rgba(0,0,0,.2)', X + 2, Y + 14, 12, 2);
+  if (state === 'sleep'){
+    d(2, 9, 11, 5, body); d(3, 9, 9, 1, light); d(11, 8, 4, 4, body); d(13, 8, 2, 2, dark); d(14, 10, 1, 1, '#1b1512'); d(0, 11, 3, 2, body);
+    return;
+  }
+  const wag = state === 'growl' ? 0 : (Math.floor(now / 160) % 2);
+  d(3, 7, 10, 5, body); d(4, 7, 8, 1, light);
+  d(3, 12, 2, 3, dark); d(6, 12, 2, 3, body); d(9, 12, 2, 3, dark); d(11, 12, 2, 3, body);
+  d(10, 3, 5, 5, body); d(14, 5, 2, 2, light); d(15, 5, 1, 1, '#1b1512');
+  d(10, 2, 2, 3, dark); d(12, 6, 1, 1, '#1b1512');
+  d(0, wag ? 5 : 7, 3, 2, dark);
+  if (state === 'growl'){ d(13, 7, 3, 1, '#f2eee4'); }
+}
+
+/* ---------- ESTADO ---------- */
+let day = 1, mode = 'title', dq = null, locked = false;
+let done = new Set(), notes = [], npcs = [], objects = [], seen = new Set();
+let gazeForever = false;
+const player = {tx:20, ty:22, x:20 * T, y:22 * T, dir:'up', moving:false, fx:0, fy:0, t:0, step:0, frame:0};
+const cv = $('cv'); const g = cv.getContext('2d');
+let W = 224, H = 300;
+const SAVE_KEY = 'vale-sereno-v2';
+function save(){ try { localStorage.setItem(SAVE_KEY, JSON.stringify({day, notes})); } catch(e){} }
+function load(){ try { const s = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); if (s && s.day > 1 && s.day <= 7) return s; } catch(e){} return null; }
+function clearSave(){ try { localStorage.removeItem(SAVE_KEY); } catch(e){} }
+
+/* ---------- OBJETOS ---------- */
+function makeObjects(){
+  objects = [
+    {id:'easel', tx:17, ty:20, w:1, draw:drawEasel, use:useEasel},
+    {id:'mural', tx:23, ty:21, w:1, draw:drawMural, use:useMural},
+    {id:'barrier', tx:19, ty:6, w:2, active:() => day <= 4, draw:drawBarrier, use:() => say([['','Placa: "Trilha fechada. Abre quando for a hora."']])},
+    {id:'mailbox', tx:26, ty:31, w:1, draw:drawMailbox, use:() => { say([['t', byDay(T_MAIL, day)]]); if (day >= 4) addNote('No correio, várias cartas com letras diferentes. Todas começam com "Desculpa a demora".'); }},
+    {id:'hole', tx:12, ty:9, w:1, active:() => day >= 4, draw:drawHole, use:() => {
+      if (day === 4) return say([['t','Um buraco recém-cavado.'],['t','Você mede com os olhos. Tem o seu tamanho.']], () => addNote('Tem um buraco novo no cemitério. Do meu tamanho.'));
+      say([['t','Terra fresca. Nenhum nome.'],['t','Em cima, um vaso com uma flor amarela.']]);
+    }}
+  ];
+}
+function objectAt(tx, ty){ return objects.find(o => (!o.active || o.active()) && ty === o.ty && tx >= o.tx && tx < o.tx + o.w); }
+function drawEasel(g, X, Y){
+  px(g, C.woodD, X + 3, Y + 2, 2, 13); px(g, C.woodD, X + 11, Y + 2, 2, 13); px(g, C.woodD, X + 7, Y + 4, 2, 10);
+  px(g, '#3a2a1c', X + 1, Y - 9, 14, 12); px(g, '#f2ecdf', X + 2, Y - 8, 12, 10);
+  px(g, '#7fae5c', X + 2, Y - 3, 12, 5); px(g, '#7fc0e0', X + 6, Y - 5, 4, 2); px(g, '#8a5a32', X + 3, Y - 2, 4, 1);
+  if (day < 5) px(g, '#d9b440', X + 4, Y - 4, 1, 2);
+  if (day >= 2) px(g, '#3f63a8', X + 6, Y - 4, 1, 2);
+  if (day === 5) px(g, '#a8473a', X + 4, Y - 4, 1, 2);
+}
+function drawMural(g, X, Y){
+  px(g, C.woodD, X + 2, Y + 4, 2, 11); px(g, C.woodD, X + 12, Y + 4, 2, 11);
+  px(g, '#6a4428', X, Y - 7, 16, 12); px(g, '#b8895a', X + 1, Y - 6, 14, 10);
+  [[2,-5],[7,-5],[11,-4],[3,-1],[8,-1]].forEach(([a, b], i) => {
+    if (i === 3 && day >= 5){ px(g, '#d0302a', X + a + 1, Y + b); return; }
+    px(g, '#f4efe3', X + a, Y + b, 3, 3); px(g, i === 3 ? '#d9b440' : '#7a8f6a', X + a + 1, Y + b + 1);
+  });
+  if (day === 7){ px(g, '#f4efe3', X + 12, Y - 1, 3, 3); px(g, '#3f63a8', X + 13, Y); }
+}
+function drawBarrier(g, X, Y){
+  px(g, C.woodD, X + 1, Y + 2, 2, 13); px(g, C.woodD, X + 29, Y + 2, 2, 13);
+  px(g, '#c9c2b0', X, Y + 5, 32, 3); [4, 14, 24].forEach(a => px(g, '#a8473a', X + a, Y + 5, 4, 3));
+  px(g, '#c9c2b0', X, Y + 10, 32, 2);
+  px(g, '#5e4128', X + 11, Y - 6, 10, 9); px(g, '#ece4d0', X + 12, Y - 5, 8, 7);
+  px(g, '#5e4128', X + 13, Y - 3, 6, 1); px(g, '#5e4128', X + 13, Y - 1, 4, 1);
+}
+function drawMailbox(g, X, Y){
+  px(g, 'rgba(0,0,0,.2)', X + 4, Y + 13, 8, 2);
+  px(g, C.woodD, X + 7, Y + 4, 2, 10);
+  px(g, '#c0402e', X + 3, Y - 4, 10, 9); px(g, '#d85a44', X + 4, Y - 5, 8, 2); px(g, '#2a1a14', X + 5, Y - 1, 6, 1);
+  if (day >= 4){ px(g, '#f4efe3', X + 6, Y - 3, 4, 2); }
+}
+function drawHole(g, X, Y){
+  if (day === 4){ px(g, C.soilD, X + 2, Y + 2, 12, 12); px(g, '#1a120c', X + 3, Y + 3, 10, 10); px(g, C.soil, X + 13, Y + 4, 3, 6); }
+  else { px(g, C.soil, X + 2, Y + 3, 12, 11); px(g, C.soilD, X + 3, Y + 10, 10, 2); px(g, '#8a7a6a', X + 6, Y + 1, 4, 4); px(g, '#f2d05a', X + 6, Y - 2, 4, 3); px(g, '#3f7a35', X + 7, Y + 1, 1, 1); }
+}
+
+/* ---------- DIA ---------- */
+const FILTERS = ['', 'none', 'saturate(.86)', 'saturate(.7) brightness(.97)', 'saturate(.52) brightness(.94)', 'saturate(.36) brightness(.9) contrast(1.05)', 'saturate(.14) brightness(.8) contrast(1.12)', 'saturate(1.3) contrast(1.06) brightness(1.05)'];
+const VIG = [0, 0.12, 0.22, 0.36, 0.5, 0.66, 0.85, 0.3];
+function setupDay(d){
+  day = d; done = new Set();
+  const D = DAYS[d];
+  npcs = Object.keys(D.npcs).map(id => {
+    const p = (D.pos && D.pos[id]) || POS[id];
+    return {id, tx:p[0], ty:p[1], dir:p[2], home:p[2], phase:Math.random() * 6, ci:0};
+  });
+  makeObjects();
+  player.tx = D.spawn[0]; player.ty = D.spawn[1]; player.dir = D.spawn[2];
+  player.x = player.tx * T; player.y = player.ty * T; player.moving = false;
+  gazeForever = false;
+  if (D.startNote) addNote(D.startNote.text, D.startNote.hand);
+  cv.style.filter = FILTERS[d]; $('mapcv').style.filter = FILTERS[d];
+  $('vig').style.opacity = VIG[d];
+  Snd.setDay(d);
+  updateHUD();
+}
+function remaining(){ return DAYS[day].tasks.filter(t => !done.has(t)); }
+function updateHUD(){
+  $('dayLabel').textContent = 'DIA ' + day + ' DE 7';
+  const D = DAYS[day], rem = remaining();
+  let txt;
+  if (!rem.length) txt = day === 7 ? 'Aproveite o último dia' : 'Volte à pousada para dormir';
+  else txt = D.hideCount ? D.obj : D.obj + ' · ' + (D.tasks.length - rem.length) + ' de ' + D.tasks.length;
+  $('objective').textContent = txt;
+}
+function addNote(text, hand){
+  if (notes.some(n => n.text === text)) return;
+  notes.push({day, text, hand:!!hand});
+  pulse($('btnNote'));
+}
+function pulse(el){ el.classList.remove('pulse'); void el.offsetWidth; el.classList.add('pulse'); }
+function complete(task){
+  if (done.has(task) || !DAYS[day].tasks.includes(task)) return;
+  done.add(task);
+  updateHUD();
+  if (!remaining().length && day === 7) setTimeout(ending, 400);
+}
+function noteFor(task){ const n = DAYS[day].notes && DAYS[day].notes[task]; if (n) addNote(n); }
+
+/* ---------- INTERAÇÕES ---------- */
+const DV = {up:[0,-1], down:[0,1], left:[-1,0], right:[1,0]};
+const OPP = {up:'down', down:'up', left:'right', right:'left'};
+function interact(){
+  const [dx, dy] = DV[player.dir];
+  const cx = player.x + 8, cy = player.y + 12;
+  let tx = Math.floor((cx + dx * 11) / T), ty = Math.floor((cy + dy * 11) / T);
+  if (tx === player.tx && ty === player.ty){ tx += dx; ty += dy; }
+  const n = npcs.find(n => n.tx === tx && n.ty === ty) || npcs.find(n => n.tx === player.tx + dx && n.ty === player.ty + dy);
+  if (n && (n.tx !== tx || n.ty !== ty)){ tx = n.tx; ty = n.ty; }
+  if (n) return talk(n);
+  const o = objectAt(tx, ty);
+  if (o) return o.use();
+  const ch = tileAt(tx, ty);
+  if (ch === 'w') return say([['t', T_FOUNTAIN[day]]]);
+  if (ch === 'L') return say([['t', T_LAKE[day]]]);
+  if (ch === 'A' || ch === 'S') return useBus();
+  if (ch === 'P') return useInn();
+  if (ch === 'D'){ const b = bAt(tx, ty); return useDoor(b ? b.name : ''); }
+  if (ch === 'W'){ const b = bAt(tx, ty); return useDoor(b ? b.name : ''); }
+  if (ch === 'g') return useGrave(tx, ty);
+  if (ch === 'O') return say([['t', T_WELL[day]]]);
+  if (ch === 'Y') return say([['', byDay(T_SIGN, day)]]);
+  if (ch === 'o') return usePhone();
+  if (ch === 'h') return say([['t', byDay(T_HORTA, day)]]);
+  if (ch === 'v') return useVaral();
+  if (ch === 'b') return say([['t', T_BUSH]]);
+  if (ch === 'x') return say([['t', 'A cerca do cemitério. Recém-pintada.']]);
+  if (ch === 'B'){
+    if (tx === 16 && ty === 23 && day >= 5) return say([['t','O banco da Rosa está vazio. Ainda morno.']]);
+    return say([['t','Um banco de madeira. Todos os bancos da praça estão virados pra floresta.']]);
+  }
+  if (ch === 'F') return say([['t', day >= 5 ? 'Escuro demais pra ver onde as árvores terminam.' : 'Árvores fechadas. Não dá pra passar.']]);
+  if (ch === 'T') return say([['t', 'Uma árvore. Tem um nome riscado no tronco, apagado demais pra ler.']]);
+  if (ch === 'R' || ch === 'H') return;
+}
+function talk(n){
+  if (n.id !== 'dog') n.dir = OPP[player.dir];
+  const task = 'npc:' + n.id;
+  const convs = DAYS[day].npcs[n.id] || [];
+  const lines = n.ci < convs.length ? convs[n.ci++] : (AGAIN[n.id] || [['t','...']]);
+  say(lines, () => {
+    if (!gazeForever && n.id !== 'dog') n.dir = n.home;
+    if (n.ci === 1){ noteFor(task); complete(task); }
+  });
+}
+function useEasel(){
+  if (day === 2) return say([['t','Na pintura, um homem de camisa azul está sentado num banco da praça.'],['t','Eu estou de camisa azul. E ontem eu sentei naquele banco.']], () => { noteFor('obj:easel'); complete('obj:easel'); });
+  say([['t', byDay(T_EASEL, day)]]);
+}
+function useMural(){
+  if (day === 4) return say([['t','Fotos de visitantes sorrindo. Dezenas.'],['t','Iracema. Bento. Lúcia. Tobias. Todos mais novos, todos de mala na mão.'],['t','Em uma delas, a Rosa. Embaixo, escrito à mão:'],['','"Rosa A., São Paulo, 2019. Fico só uma semana."']], () => { noteFor('obj:mural'); complete('obj:mural'); });
+  say([['t', byDay(T_MURAL, day)]]);
+}
+function useGrave(tx, ty){
+  const ins = GRAVES[tx + ',' + ty];
+  if (day < 3) return say([['t','A lápide está coberta de musgo. Não dá pra ler.']]);
+  const extra = () => {
+    if (tx === 13 && ty === 10) addNote('Tem uma lápide com o nome do Seu Bento. E ele está vivo.');
+    if (tx === 15 && ty === 12) addNote('A lápide da Rosa diz quando ela chegou: 2019.');
+  };
+  if (day === 3 && !done.has('obj:graves')){
+    return say([['t','Alguém limpou o musgo hoje.'],['', ins],['t','"Aqui chegou." Não "aqui jaz".'],['t','Só datas de chegada. Nenhuma de partida.']], () => { noteFor('obj:graves'); complete('obj:graves'); extra(); });
+  }
+  say([['', ins]], extra);
+}
+function useDoor(name){
+  if (name === 'escola' && day === 3 && !done.has('obj:school')){
+    return say([['t','A escola está trancada. Pelo vidro, carteiras pequenas cobertas de poeira.'],['t','No quadro, ainda dá pra ler:'],['','"Lição de casa: ficar."']], () => { noteFor('obj:school'); complete('obj:school'); });
+  }
+  if (name === 'escola' && day >= 3) return say([['t','Pelo vidro, o quadro: "Lição de casa: ficar."']]);
+  const d = DOORS[name];
+  say([['t', d ? byDay(d, day) : 'Fechado.']]);
+}
+function useBus(){
+  const ad = ['','"CANSADO? Venha para Vale Sereno. Aqui ninguém tem pressa."'];
+  if (day === 1) return say([['t','O mesmo anúncio que eu vi na cidade.'], ad]);
+  if (day === 6 && !done.has('obj:bus')) return say([['t','Você espera o ônibus. Uma hora. Duas.'],['t','O horário na placa diz apenas:'],['','"Próximo ônibus: quando você quiser ir."'],['t','Você não sabe se quer.']], () => { noteFor('obj:bus'); complete('obj:bus'); });
+  if (day === 7) return say([ad, ['t','Você não lembra mais por que leu isso tantas vezes.']]);
+  say([['t','O ponto de ônibus. O anúncio continua lá.'], ad]);
+}
+function usePhone(){
+  if (day === 6) return say([['t','Você tenta ligar pra Bia do orelhão.'],['t','Do outro lado, alguém respira.'],['','"Aqui ninguém tem pressa."']], () => addNote('Liguei do orelhão. Alguém respondeu com a frase da cidade.'));
+  say([['t', byDay(T_PHONE, day)]]);
+}
+function useVaral(){
+  if (day === 7) return say([['t', T_VARAL[7]]]);
+  say([['t', T_VARAL[1]],['t','Ninguém aqui usa nada disso. Roupas de outra vida.']], () => addNote('No varal: terno, uniforme de enfermeira, macacão de motorista.'));
+}
+function useInn(){
+  if (remaining().length) return say([['t','Ainda é cedo pra dormir.'],['', 'Objetivo: ' + DAYS[day].obj + '.']]);
+  if (day === 7) return;
+  say([['', day === 6 ? 'Você volta pra pousada. A porta estava aberta, como se esperassem.' : 'Você entra na pousada. Lá longe, o sino da capela toca uma vez.']], () => fadeTo(1, 700, startCall));
+}
+function onStep(){
+  const {tx, ty} = player;
+  if (ty <= 1 && (tx === 19 || tx === 20)){
+    if (day === 5 && !done.has('obj:trail')){
+      return say([['t','A trilha termina numa clareira escura.'],['t','No chão, uma flor amarela. Da cor da blusa da Rosa.'],['t','Você não entra.'],['t','Mas, por algum motivo, você já sabe o caminho.']], () => { noteFor('obj:trail'); complete('obj:trail'); pushBack(); });
+    }
+    return say([['t', day === 7 ? 'A clareira abre espaço. Ainda não. Mas logo.' : 'A clareira parece mais perto do que ontem.']], pushBack);
+  }
+  if ((tx === 0 || tx === MW - 1) && (ty === 40 || ty === 41)){
+    if (day === 6 && !done.has('obj:road')){
+      return say([['t','Você caminha pela estrada até escurecer.'],['t','Depois da curva, a praça.']], () => {
+        fadeTo(1, 600, () => {
+          player.tx = 19; player.ty = 25; player.x = 19 * T; player.y = 25 * T; player.dir = 'up';
+          noteFor('obj:road'); complete('obj:road');
+          fadeTo(0, 900);
+        });
+      });
+    }
+    if (day === 7) return say([['t','Ir embora? Pra onde?']], pushBack);
+    return say([['t', day === 6 ? 'De novo não. A curva sempre devolve.' : 'Ainda tem dias de férias pela frente.']], pushBack);
+  }
+}
+function pushBack(){
+  const d = OPP[player.dir], [dx, dy] = DV[d];
+  const nx = player.tx + dx, ny = player.ty + dy;
+  if (!blocked(nx, ny)) snapTo(nx, ny); else snapTo(player.tx, player.ty);
+  player.dir = d;
+}
+
+/* ---------- LIGAÇÃO ---------- */
+let callTimer = null;
+function startCall(){
+  const D = DAYS[day];
+  $('call').hidden = false;
+  $('callLbl').textContent = D.signal === 0 ? 'SEM SERVIÇO' : 'LIGAÇÃO';
+  [...$('bars').children].forEach((b, i) => b.classList.toggle('on', i < D.signal));
+  let s = 0; $('callTime').textContent = '00:00';
+  clearInterval(callTimer);
+  callTimer = setInterval(() => { s++; $('callTime').textContent = '00:' + String(s).padStart(2, '0'); }, 1000);
+  fadeTo(0, 500);
+  if (D.signal <= 2) Snd.noise(.5);
+  setTimeout(() => say(D.call, () => {
+    clearInterval(callTimer);
+    fadeTo(1, 500, () => { $('call').hidden = true; nextDay(); });
+  }), 500);
+}
+function nextDay(){
+  setupDay(day + 1);
+  save();
+  showCard([{big:'Dia ' + day, sub:DAYS[day].sub}], () => fadeTo(0, 900));
+}
+
+/* ---------- FINAL ---------- */
+function ending(){
+  locked = true;
+  say([['','Você caminha até a praça sem decidir ir.'],['','O banco da Rosa está vazio. Você para ao lado dele.'],['','Daqui dá pra ver a floresta inteira.'],['','O sino da capela começa a tocar.']], () => {
+    Snd.bell();
+    fadeTo(1, 900, () => {
+      player.tx = 17; player.ty = 23; player.x = 17 * T; player.y = 23 * T; player.dir = 'up';
+      gazeForever = true; npcs.forEach(n => { if (n.id !== 'dog') n.dir = 'up'; });
+      fadeTo(0, 1400, () => {
+        setTimeout(() => { Snd.bell(); Snd.fadeAll(); fadeTo(1, 2600, showLetter); }, 2600);
+      });
+    });
+  });
+}
+let letterReady = false;
+function showLetter(){
+  mode = 'letter'; letterReady = false;
+  const paper = $('paper');
+  paper.innerHTML = LETTER.map((l, i) => '<p' + (i === LETTER.length - 1 ? ' class="sig"' : '') + '>' + l + '</p>').join('');
+  $('letterTap').classList.remove('in');
+  $('letter').hidden = false;
+  const ps = [...paper.querySelectorAll('p')];
+  ps.forEach((p, i) => setTimeout(() => p.classList.add('in'), 700 + i * 1400));
+  setTimeout(() => { letterReady = true; $('letterTap').classList.add('in'); }, 700 + ps.length * 1400);
+}
+let endT0 = 0;
+function letterTap(){
+  if (!letterReady) return;
+  $('letter').hidden = true;
+  mode = 'end'; endT0 = performance.now();
+  cv.style.transition = 'none'; cv.style.filter = 'none'; $('vig').style.opacity = 0.5;
+  requestAnimationFrame(() => { cv.style.transition = ''; });
+  fadeTo(0, 2500);
+  clearSave();
+  setTimeout(() => $('endui').classList.add('in'), 4500);
+}
+const rain = Array.from({length:60}, () => ({x:Math.random(), y:Math.random(), s:.6 + Math.random() * .6}));
+function drawEnd(now){
+  const t = (now - endT0) / 1000;
+  px(g, '#11151d', 0, 0, W, H);
+  const base = Math.floor(H * 0.58);
+  for (let i = 0; i < 9; i++){
+    const bw = 22 + Math.floor(hash(i, 1, 7) * 20), bh = 40 + Math.floor(hash(i, 2, 7) * 70), bx = Math.floor(i * W / 7) - 10;
+    px(g, '#1d222c', bx, base - bh, bw, bh);
+    for (let wy = 0; wy < bh - 10; wy += 9) for (let wx = 3; wx < bw - 4; wx += 7)
+      if (hash(i, wx + wy * 3, 9) > .72) px(g, '#5a5440', bx + wx, base - bh + 5 + wy, 3, 4);
+  }
+  px(g, '#2c2f36', 0, base, W, 22); px(g, '#3a3d44', 0, base, W, 2);
+  px(g, '#1b1d22', 0, base + 22, W, H - base - 22);
+  for (let x = 4; x < W; x += 24) px(g, '#5e5a4c', x, base + 40, 12, 2);
+  const lx = Math.floor(W * 0.16);
+  px(g, '#3e424a', lx, base - 70, 3, 84); px(g, '#3e424a', lx, base - 70, 14, 2); px(g, '#f2e2a8', lx + 10, base - 68, 5, 2);
+  g.fillStyle = 'rgba(242,226,168,.06)'; g.beginPath(); g.moveTo(lx + 10, base - 66); g.lineTo(lx - 18, base + 18); g.lineTo(lx + 44, base + 18); g.closePath(); g.fill();
+  const sx = Math.floor(W * 0.5) - 20, sy = base - 44;
+  px(g, '#3e424a', sx, sy, 48, 3); px(g, '#3e424a', sx + 2, sy, 2, 58); px(g, '#3e424a', sx + 44, sy, 2, 58);
+  const ax = sx + 14, ay = sy + 8;
+  px(g, '#2b2824', ax - 1, ay - 1, 26, 34); px(g, '#f2c75a', ax, ay, 24, 32); px(g, '#e8743a', ax + 15, ay + 4, 5, 5);
+  px(g, '#5c9a4a', ax, ay + 20, 24, 12); px(g, '#3f7a35', ax, ay + 26, 24, 6);
+  px(g, '#1f3a27', ax + 2, ay + 16, 4, 6); px(g, '#1f3a27', ax + 17, ay + 15, 5, 7);
+  px(g, '#2b2824', ax + 3, ay + 4, 9, 1); px(g, '#2b2824', ax + 3, ay + 7, 7, 1); px(g, '#2b2824', ax + 3, ay + 10, 10, 1);
+  g.fillStyle = 'rgba(242,199,90,.10)'; g.fillRect(ax - 8, ay - 6, 40, 52);
+  // Bia com a carta na mão
+  drawChar(g, ax + 4, base + 6, CH.bia, 'up', 0, 0, false);
+  px(g, '#efe6d2', ax + 13, base + 3, 4, 3);
+  g.fillStyle = 'rgba(170,185,210,.35)';
+  rain.forEach(r => { const y = ((r.y + t * r.s * 0.9) % 1) * H, x = ((r.x + t * 0.05) % 1) * W; g.fillRect(Math.floor(x), Math.floor(y), 1, 4); });
+}
+
+/* ---------- DIÁLOGO ---------- */
+let typing = null, typeFull = '';
+function say(lines, cb){ dq = {lines, i:0, cb}; showLine(); }
+function showLine(){
+  const [who, text] = dq.lines[dq.i];
+  const box = $('dialog');
+  box.hidden = false;
+  box.className = who === 't' ? 'thought' : who === '' ? 'narr' : '';
+  const w = $('who');
+  if (who && who !== 't'){ w.hidden = false; w.textContent = NAMES[who] || who; } else w.hidden = true;
+  $('nxt').hidden = true;
+  typeFull = text;
+  let i = 0; const el = $('txt'); el.textContent = '';
+  clearInterval(typing);
+  typing = setInterval(() => {
+    i++;
+    el.textContent = typeFull.slice(0, i);
+    if (i % 3 === 0 && VOICE[who]) Snd.blip(VOICE[who]);
+    if (i >= typeFull.length){ clearInterval(typing); typing = null; $('nxt').hidden = false; }
+  }, 24);
+}
+function advance(){
+  if (!dq) return;
+  if (typing){ clearInterval(typing); typing = null; $('txt').textContent = typeFull; $('nxt').hidden = false; return; }
+  dq.i++;
+  if (dq.i >= dq.lines.length){ $('dialog').hidden = true; const cb = dq.cb; dq = null; if (cb) cb(); }
+  else showLine();
+}
+
+/* ---------- CARTÕES ---------- */
+let cardPages = [], cardCb = null;
+function showCard(pages, cb){ mode = 'card'; cardPages = pages.slice(); cardCb = cb; $('card').hidden = false; renderCard(); }
+function renderCard(){
+  const p = cardPages[0], el = $('card');
+  el.innerHTML = '';
+  const add = (cls, txt) => { const d = document.createElement('div'); d.className = cls; d.textContent = txt; el.appendChild(d); };
+  if (p.big){ add('big', p.big); if (p.sub) add('sub', p.sub); } else add('nar', p.nar);
+  add('tap', 'TOQUE PARA CONTINUAR');
+}
+function nextCard(){
+  cardPages.shift();
+  if (cardPages.length) return renderCard();
+  $('card').hidden = true; mode = 'play';
+  const cb = cardCb; cardCb = null; if (cb) cb();
+}
+function fadeTo(op, ms, cb){
+  const f = $('fade');
+  f.style.transition = 'opacity ' + ms + 'ms ease';
+  requestAnimationFrame(() => { f.style.opacity = op; });
+  setTimeout(() => { if (cb) cb(); }, ms + 30);
+}
+
+/* ---------- SOM ---------- */
+const Snd = {
+  ctx:null, on:true, birdRate:0,
+  init(){
+    if (this.ctx){ if (this.ctx.resume) this.ctx.resume(); return; }
+    try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){ return; }
+    const c = this.ctx;
+    this.master = c.createGain(); this.master.gain.value = 0.9; this.master.connect(c.destination);
+    this.droneG = c.createGain(); this.droneG.gain.value = 0;
+    const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 200;
+    this.droneG.connect(lp); lp.connect(this.master);
+    [55, 55.7, 82.4].forEach(f => { const o = c.createOscillator(); o.type = 'sawtooth'; o.frequency.value = f; const gg = c.createGain(); gg.gain.value = 0.3; o.connect(gg); gg.connect(this.droneG); o.start(); });
+    setInterval(() => {
+      if (!this.on || !this.ctx || mode === 'end' || mode === 'letter' || !$('call').hidden) return;
+      if (Math.random() < this.birdRate) this.chirp();
+    }, 900);
+    this.setDay(day);
+  },
+  setDay(d){
+    if (!this.ctx) return;
+    this.droneG.gain.setTargetAtTime([0, 0, 0, .012, .025, .045, .07, .02][d] || 0, this.ctx.currentTime, 2);
+    this.birdRate = [0, .55, .45, .3, .16, .05, 0, .85][d] || 0;
+  },
+  fadeAll(){ if (!this.ctx) return; this.birdRate = 0; this.droneG.gain.setTargetAtTime(0, this.ctx.currentTime, 1.5); },
+  chirp(){
+    const c = this.ctx, t = c.currentTime, n = 2 + Math.floor(Math.random() * 3), base = 2200 + Math.random() * 1400;
+    for (let i = 0; i < n; i++){
+      const o = c.createOscillator(), gg = c.createGain(), s = t + i * 0.11;
+      o.type = 'sine'; o.frequency.setValueAtTime(base, s); o.frequency.exponentialRampToValueAtTime(base * 1.35, s + 0.06);
+      gg.gain.setValueAtTime(0, s); gg.gain.linearRampToValueAtTime(0.022, s + 0.01); gg.gain.exponentialRampToValueAtTime(0.0001, s + 0.08);
+      o.connect(gg); gg.connect(this.master); o.start(s); o.stop(s + 0.1);
+    }
+  },
+  bell(){
+    if (!this.on || !this.ctx) return;
+    const c = this.ctx, t = c.currentTime;
+    [196, 392, 523, 784].forEach((f, i) => {
+      const o = c.createOscillator(), gg = c.createGain(); o.type = 'sine'; o.frequency.value = f * (1 + i * 0.002);
+      gg.gain.setValueAtTime(0, t); gg.gain.linearRampToValueAtTime(0.06 / (i + 1), t + 0.01); gg.gain.exponentialRampToValueAtTime(0.0001, t + 3.5);
+      o.connect(gg); gg.connect(this.master); o.start(t); o.stop(t + 3.6);
+    });
+  },
+  blip(f){
+    if (!this.on || !this.ctx) return;
+    const c = this.ctx, t = c.currentTime, o = c.createOscillator(), gg = c.createGain();
+    o.type = 'square'; o.frequency.value = f;
+    gg.gain.setValueAtTime(0.012, t); gg.gain.exponentialRampToValueAtTime(0.0001, t + 0.03);
+    o.connect(gg); gg.connect(this.master); o.start(t); o.stop(t + 0.04);
+  },
+  noise(len){
+    if (!this.on || !this.ctx) return;
+    const c = this.ctx, buf = c.createBuffer(1, c.sampleRate * len, c.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / d.length);
+    const s = c.createBufferSource(), bp = c.createBiquadFilter(), gg = c.createGain();
+    bp.type = 'bandpass'; bp.frequency.value = 1600; gg.gain.value = 0.05;
+    s.buffer = buf; s.connect(bp); bp.connect(gg); gg.connect(this.master); s.start();
+  },
+  toggle(){
+    this.on = !this.on;
+    if (this.ctx) this.master.gain.setTargetAtTime(this.on ? 0.9 : 0, this.ctx.currentTime, 0.05);
+    $('btnSnd').classList.toggle('off', !this.on);
+    $('btnSnd').textContent = this.on ? 'SOM' : 'MUDO';
+  }
+};
+
+/* ---------- MOVIMENTO (analógico) ---------- */
+let inX = 0, inY = 0, stickX = 0, stickY = 0, keySet = new Set(), pushSince = 0, wasPushing = false, walkDist = 0;
+function blocked(tx, ty){
+  const ch = tileAt(tx, ty);
+  if (!ch || !PASS.has(ch)) return true;
+  if (npcs.some(n => n.tx === tx && n.ty === ty)) return true;
+  if (objectAt(tx, ty)) return true;
+  return false;
+}
+const HB = {l:3, r:12, t:9, b:15};
+function hits(x, y){
+  const x0 = Math.floor((x + HB.l) / T), x1 = Math.floor((x + HB.r) / T);
+  const y0 = Math.floor((y + HB.t) / T), y1 = Math.floor((y + HB.b) / T);
+  for (let ty = y0; ty <= y1; ty++) for (let tx = x0; tx <= x1; tx++){
+    if (blocked(tx, ty)) return true;
+  }
+  return false;
+}
+function readInput(){
+  let kx = (keySet.has('right') ? 1 : 0) - (keySet.has('left') ? 1 : 0);
+  let ky = (keySet.has('down') ? 1 : 0) - (keySet.has('up') ? 1 : 0);
+  if (kx || ky){ const m = Math.hypot(kx, ky); inX = kx / m; inY = ky / m; }
+  else { inX = stickX; inY = stickY; }
+}
+function updatePlayer(dt, now){
+  readInput();
+  const canMove = mode === 'play' && !dq && !locked && $('notebook').hidden && $('mapview').hidden;
+  let mag = Math.hypot(inX, inY);
+  if (!canMove) mag = 0;
+  const pushing = mag > 0.18;
+  if (pushing && !wasPushing) pushSince = now;
+  wasPushing = pushing;
+  player.moving = false;
+  if (!pushing){ player.frame = 0; return; }
+  const ux = inX / mag, uy = inY / mag;
+  player.dir = Math.abs(ux) > Math.abs(uy) ? (ux > 0 ? 'right' : 'left') : (uy > 0 ? 'down' : 'up');
+  if (day === 7 && now - pushSince < 300) return;
+  const speed = (day === 7 ? 40 : 78) * Math.min(1, (mag - 0.18) / 0.62 + 0.25);
+  const dx = ux * speed * dt, dy = uy * speed * dt;
+  const ox = player.x, oy = player.y;
+  if (!hits(player.x + dx, player.y)) player.x += dx;
+  else if (Math.abs(ux) > 0.6){
+    // desliza para o centro do corredor
+    const cy = Math.round(player.y / T) * T, ny = player.y + Math.sign(cy - player.y) * Math.min(Math.abs(cy - player.y), speed * dt);
+    if (!hits(player.x, ny)) player.y = ny;
+  }
+  if (!hits(player.x, player.y + dy)) player.y += dy;
+  else if (Math.abs(uy) > 0.6){
+    const cx = Math.round(player.x / T) * T, nx = player.x + Math.sign(cx - player.x) * Math.min(Math.abs(cx - player.x), speed * dt);
+    if (!hits(nx, player.y)) player.x = nx;
+  }
+  const moved = Math.hypot(player.x - ox, player.y - oy);
+  if (moved > 0.01){
+    player.moving = true;
+    walkDist += moved;
+    player.frame = [1, 0, 2, 0][Math.floor(walkDist / 5) % 4];
+  } else player.frame = 0;
+  const ntx = Math.floor((player.x + 8) / T), nty = Math.floor((player.y + 12) / T);
+  if (ntx !== player.tx || nty !== player.ty){ player.tx = ntx; player.ty = nty; onStep(); }
+}
+function snapTo(tx, ty){ player.tx = tx; player.ty = ty; player.x = tx * T; player.y = ty * T; }
+
+/* ---------- RENDER ---------- */
+const CLUES = {'obj:easel':[17,20,-6], 'obj:mural':[23,21,-6], 'obj:graves':[13,10,-3], 'obj:school':[14,30,-2], 'obj:trail':[19,1,6], 'obj:bus':[22,39,-8]};
+function render(now){
+  if (mode === 'end'){ drawEnd(now); return; }
+  px(g, '#0b0f0c', 0, 0, W, H);
+  const mw = MW * T, mh = MH * T;
+  const camX = mw <= W ? Math.round((mw - W) / 2) : clamp(Math.round(player.x + 8 - W / 2), 0, mw - W);
+  const camY = mh <= H ? Math.round((mh - H) / 2) : clamp(Math.round(player.y + 6 - H / 2), 0, mh - H);
+  g.drawImage(staticCv, -camX, -camY);
+  g.save(); g.translate(-camX, -camY);
+  const s = Math.floor(now / 450);
+  for (let i = 0; i < 10; i++){
+    const [x, y] = WATER_TILES[Math.floor(hash(i, s, 5) * WATER_TILES.length)];
+    if (x * T + 16 < camX || x * T > camX + W || y * T + 16 < camY || y * T > camY + H) continue;
+    px(g, C.waterL, x * T + 4 + Math.floor(hash(x, y, s) * 8), y * T + 4 + Math.floor(hash(y, x, s) * 8), 2, 1);
+  }
+  const gazeAll = gazeForever || (day >= 4 && (now / 1000) % 8 > 6.4);
+  const ents = [];
+  objects.forEach(o => { if (!o.active || o.active()) ents.push({y:o.ty * T, o}); });
+  npcs.forEach(n => ents.push({y:n.ty * T, n}));
+  if (mode !== 'title') ents.push({y:player.y + 0.5, p:true});
+  ents.sort((a, b) => a.y - b.y);
+  const sync = day >= 5;
+  ents.forEach(e => {
+    if (e.o) return e.o.draw(g, e.o.tx * T, e.o.ty * T);
+    if (e.n){
+      const n = e.n, X = n.tx * T, Y = n.ty * T;
+      if (n.id === 'dog'){
+        const st = day === 6 ? 'sleep' : day === 7 ? 'growl' : 'idle';
+        const dir = day === 7 ? (player.x < X ? 'left' : 'right') : (gazeAll && day >= 4 ? 'left' : n.dir);
+        drawDog(g, X, Y, dir, now, st);
+        return;
+      }
+      const bob = Math.floor((((now / 1000) + (sync ? 0 : n.phase)) % 1.6) / 0.8) === 1 ? 1 : 0;
+      const dir = (gazeAll && !dq) ? 'up' : n.dir;
+      drawChar(g, X, Y, CH[n.id], dir, 0, bob, CH[n.id].smile);
+      if (n.id === 'ivo'){
+        const by = Math.floor((now / 600) % 2);
+        px(g, C.woodD, X + 12, Y - 14, 1, 6); px(g, C.woodD, X + 13, Y - 19, 1, 5);
+        px(g, 'rgba(230,230,230,.6)', X + 13, Y - 26, 1, 7);
+        px(g, '#e8743a', X + 12, Y - 28 + by, 3, 2);
+      }
+      if (mode === 'play' && !dq){
+        const convs = DAYS[day].npcs[n.id] || [];
+        const req = DAYS[day].tasks.includes('npc:' + n.id) && !done.has('npc:' + n.id);
+        const by = Y - 22 - (CH[n.id].tall ? 1 : 0) + Math.floor((now / 300) % 2);
+        if (req){ px(g, '#14100c', X + 6, by, 4, 8); px(g, '#f2d27a', X + 7, by + 1, 2, 4); px(g, '#f2d27a', X + 7, by + 6, 2, 1); }
+        else if (n.ci < convs.length){ px(g, '#14100c', X + 4, by + 3, 8, 4); px(g, '#e8e1cf', X + 5, by + 4); px(g, '#e8e1cf', X + 7, by + 4); px(g, '#e8e1cf', X + 9, by + 4); }
+      }
+      return;
+    }
+    drawChar(g, Math.round(player.x), Math.round(player.y), CH.caio, player.dir, player.frame, 0, day === 7);
+  });
+  if (mode === 'play'){
+    DAYS[day].tasks.forEach(tk => {
+      const c = CLUES[tk]; if (!c || done.has(tk)) return;
+      if (Math.abs(player.tx - c[0]) + Math.abs(player.ty - c[1]) > 6) return;
+      if (Math.floor(now / 350) % 3 === 0) return;
+      px(g, '#fff4c4', c[0] * T + 8, c[1] * T + c[2], 1, 3); px(g, '#fff4c4', c[0] * T + 7, c[1] * T + c[2] + 1, 3, 1);
+    });
+  }
+  g.restore();
+}
+
+/* ---------- MAPA DA CIDADE ---------- */
+const LABELS = [['Capela',6,7],['Cemitério',13,8],['Lago',32,8],['Trilha',19.5,3],['Pousada',7,18],['Padaria',32,18],['Praça',19.5,17.5],['Floricultura',6,27],['Escola',14,27],['Correio',24.5,27],['Ateliê',33,27],['Poço',16,31],['Ponto de ônibus',22.5,38],['Casa azul',33,36]];
+function openMap(){
+  const mc = $('mapcv'), mg = mc.getContext('2d');
+  mc.width = MW * T; mc.height = (MH - 2) * T;
+  mg.imageSmoothingEnabled = false;
+  mg.drawImage(staticCv, 0, 0);
+  mg.fillStyle = 'rgba(10,12,10,.18)'; mg.fillRect(0, 0, mc.width, mc.height);
+  mg.font = '600 15px "Pixelify Sans", "Courier New", monospace'; mg.textAlign = 'center'; mg.textBaseline = 'middle';
+  LABELS.forEach(([name, x, y]) => {
+    if (name === 'Trilha' && day <= 4) return;
+    const tw = mg.measureText(name).width + 10, cx = x * T + 8, cy = y * T;
+    mg.fillStyle = 'rgba(12,15,13,.82)'; mg.fillRect(Math.round(cx - tw / 2), cy - 10, Math.round(tw), 20);
+    mg.fillStyle = '#efe5cf'; mg.fillText(name, cx, cy + 1);
+  });
+  const pxp = player.tx * T + 8, pyp = player.ty * T + 8;
+  mg.fillStyle = '#0c0f0d'; mg.beginPath(); mg.arc(pxp, pyp, 9, 0, Math.PI * 2); mg.fill();
+  mg.fillStyle = '#d8b25a'; mg.beginPath(); mg.arc(pxp, pyp, 6, 0, Math.PI * 2); mg.fill();
+  $('mapview').hidden = false;
+}
+
+/* ---------- TAMANHO 16:9 ---------- */
+function fit(){
+  W = 384; H = 216;
+  if (cv.width !== W){ cv.width = W; cv.height = H; }
+  g.imageSmoothingEnabled = false;
+  const st = $('stage').getBoundingClientRect();
+  let w = st.width - 4, h = w * 9 / 16;
+  if (h > st.height - 4){ h = st.height - 4; w = h * 16 / 9; }
+  w = Math.max(200, Math.floor(w)); h = Math.floor(w * 9 / 16);
+  const sc = $('screen');
+  sc.style.width = w + 'px'; sc.style.height = h + 'px';
+  sc.style.fontSize = Math.max(11, Math.min(18, h / 17)).toFixed(1) + 'px';
+}
+let last = performance.now();
+function loop(now){
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  updatePlayer(dt, now); render(now);
+  requestAnimationFrame(loop);
+}
+
+/* ---------- ENTRADA ---------- */
+function pressA(){
+  if (!$('notebook').hidden){ $('notebook').hidden = true; return; }
+  if (!$('mapview').hidden){ $('mapview').hidden = true; return; }
+  if (mode === 'title' || mode === 'end') return;
+  if (mode === 'letter') return letterTap();
+  if (dq) return advance();
+  if (mode === 'card') return nextCard();
+  if (mode === 'play' && !locked) interact();
+}
+const btnA = $('btnA');
+btnA.addEventListener('pointerdown', e => { e.preventDefault(); btnA.classList.add('on'); pressA(); });
+['pointerup','pointercancel','pointerleave'].forEach(ev => btnA.addEventListener(ev, () => btnA.classList.remove('on')));
+['dialog','card','letter'].forEach(id => $(id).addEventListener('pointerdown', e => { e.preventDefault(); pressA(); }));
+$('mapview').addEventListener('pointerdown', e => { e.preventDefault(); $('mapview').hidden = true; });
+const stick = $('stick'), knob = $('knob');
+let stickId = null;
+function stickMove(e){
+  const r = stick.getBoundingClientRect(), R = r.width / 2 - 14;
+  let dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2);
+  const m = Math.hypot(dx, dy);
+  if (m > R){ dx = dx / m * R; dy = dy / m * R; }
+  knob.style.transform = 'translate(' + dx.toFixed(1) + 'px,' + dy.toFixed(1) + 'px)';
+  stickX = dx / R; stickY = dy / R;
+}
+function stickEnd(){ stickId = null; stickX = 0; stickY = 0; knob.style.transform = ''; stick.classList.remove('on'); }
+stick.addEventListener('pointerdown', e => { e.preventDefault(); stickId = e.pointerId; try { stick.setPointerCapture(e.pointerId); } catch(_){} stick.classList.add('on'); stickMove(e); });
+stick.addEventListener('pointermove', e => { if (e.pointerId === stickId) stickMove(e); });
+['pointerup','pointercancel','lostpointercapture'].forEach(ev => stick.addEventListener(ev, e => { if (e.pointerId === stickId) stickEnd(); }));
+const KEYS = {ArrowUp:'up', ArrowDown:'down', ArrowLeft:'left', ArrowRight:'right', w:'up', s:'down', a:'left', d:'right', W:'up', S:'down', A:'left', D:'right'};
+window.addEventListener('keydown', e => {
+  if (KEYS[e.key]){ e.preventDefault(); keySet.add(KEYS[e.key]); return; }
+  if (e.key === ' ' || e.key === 'Enter' || e.key === 'z' || e.key === 'e'){ e.preventDefault(); if (mode !== 'title' && !e.repeat) pressA(); }
+  if (e.key === 'm' && mode === 'play') ($('mapview').hidden ? openMap() : ($('mapview').hidden = true));
+});
+window.addEventListener('keyup', e => { if (KEYS[e.key]) keySet.delete(KEYS[e.key]); });
+window.addEventListener('blur', () => { keySet.clear(); stickEnd(); });
+document.addEventListener('gesturestart', e => e.preventDefault());
+$('btnSnd').addEventListener('click', () => { Snd.init(); Snd.toggle(); });
+$('btnMap').addEventListener('click', () => { if (mode === 'play' || mode === 'card') openMap(); });
+$('btnNote').addEventListener('click', () => {
+  const box = $('notes'); box.innerHTML = '';
+  if (!notes.length){ const e = document.createElement('div'); e.className = 'empty'; e.textContent = 'Nada anotado ainda. Converse e repare nos detalhes.'; box.appendChild(e); }
+  let lastDay = 0;
+  notes.forEach(n => {
+    if (n.day !== lastDay){ const d = document.createElement('div'); d.className = 'd'; d.textContent = 'DIA ' + n.day; box.appendChild(d); lastDay = n.day; }
+    const e = document.createElement('div'); e.className = 'e' + (n.hand ? ' hand' : ''); e.textContent = n.hand ? n.text : '· ' + n.text; box.appendChild(e);
+  });
+  $('notebook').hidden = false;
+});
+$('btnNoteClose').addEventListener('click', () => { $('notebook').hidden = true; });
+
+/* ---------- INÍCIO ---------- */
+function begin(fromSave){
+  Snd.init();
+  $('title').hidden = true; locked = false;
+  $('endui').classList.remove('in');
+  $('fade').style.opacity = 1;
+  if (fromSave){
+    setupDay(fromSave.day); notes = fromSave.notes || [];
+    showCard([{big:'Dia ' + day, sub:DAYS[day].sub}], () => fadeTo(0, 900));
+  } else {
+    notes = []; setupDay(1); save();
+    showCard([
+      {nar:'Fazia meses que você não desligava o computador.'},
+      {nar:'Numa terça qualquer, num ponto de ônibus, um anúncio.'},
+      {nar:'"Cansado? Venha para Vale Sereno. Aqui ninguém tem pressa."'},
+      {nar:'A Bia achou ótima ideia. "Vai. Você tá precisando."'},
+      {nar:'Sete dias de férias. Você foi.'},
+      {big:'Dia 1', sub:'Chegada'}
+    ], () => fadeTo(0, 1100));
+  }
+}
+$('btnStart').addEventListener('click', () => { clearSave(); begin(null); });
+const saved = load();
+if (saved){ $('btnCont').hidden = false; $('btnCont').textContent = 'Continuar no dia ' + saved.day; }
+$('btnCont').addEventListener('click', () => begin(load()));
+$('btnAgain').addEventListener('click', () => {
+  $('endui').classList.remove('in');
+  mode = 'title'; setupDay(1);
+  player.tx = 20; player.ty = 22; player.x = 20 * T; player.y = 22 * T;
+  $('fade').style.transition = 'none'; $('fade').style.opacity = 0;
+  $('btnCont').hidden = true; $('title').hidden = false;
+});
+
+buildStatic();
+setupDay(1);
+player.tx = 20; player.ty = 22; player.x = 20 * T; player.y = 22 * T;
+fit();
+window.addEventListener('resize', fit);
+window.addEventListener('orientationchange', () => setTimeout(fit, 250));
+requestAnimationFrame(loop);
+
+})();
+</script>
+
+</body>
+</html>
