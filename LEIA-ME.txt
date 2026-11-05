@@ -1,0 +1,17 @@
+VALE SERENO - PROJETO ANDROID (APK DE TESTE)
+
+Gerar o APK no Android Studio
+1. Abra o Android Studio e escolha File > Open. Selecione esta pasta (ValeSereno).
+2. Espere a sincronização terminar. Na primeira vez ele baixa o Gradle e o SDK, e isso demora alguns minutos.
+3. No menu, vá em Build > Build App Bundle(s) / APK(s) > Build APK(s).
+4. Quando terminar, clique em "locate" no aviso. O arquivo fica em:
+   app/build/outputs/apk/debug/app-debug.apk
+
+Instalar no celular Android
+1. Mande o app-debug.apk para o celular (WhatsApp, Drive, cabo USB).
+2. Abra o arquivo. Se o Android pedir, permita "instalar apps desconhecidos" para o app que abriu o arquivo.
+3. Abra o Vale Sereno. Ele roda em tela cheia, na horizontal e sem internet.
+
+Atualizar o jogo
+O jogo inteiro fica em app/src/main/assets/index.html.
+Para mudar o jogo, substitua esse arquivo e gere o APK de novo.
